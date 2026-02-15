@@ -1,0 +1,92 @@
+/* ===== IMPORT FONTS ===== */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Merriweather:wght@300;400;700&family=Open+Sans:wght@400;500;600&display=swap");
+
+/* ===== IMPORT MODULAR CSS ===== */
+@import url("header.css");
+@import url("hero.css");
+@import url("components.css");
+@import url("admin.css");
+@import url("blocks.css");
+
+/* ===== CSS VARIABLES ===== */
+:root {
+	--teal-primary: #0a4a5c;
+	--teal-dark: #083d4d;
+	--orange-primary: #e8883d;
+	--orange-accent: #1b323d;
+	--orange-warm: #e8883d;
+	--cream: #fff8e7;
+	--navy: #1b323d;
+	--red-orange: #e8883d;
+	--gradient-orange: linear-gradient(135deg, #e8883d, #c46a28);
+	--gradient-teal: linear-gradient(135deg, #0a4a5c, #0d5f75);
+	--white: #ffffff;
+	--light-gray: #f5f5f5;
+	--medium-gray: #e0e0e0;
+	--dark-gray: #333333;
+	--text-primary: #1b323d;
+	--text-secondary: #555555;
+	--shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+	--shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+	--shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+	--shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.2);
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+	--radius-xl: 24px;
+	--transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== RESET ===== */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: "Open Sans", sans-serif;
+	background-color: #f0f2f5;
+	color: var(--text-primary);
+	line-height: 1.6;
+	overflow-x: hidden;
+}
+
+/* Garante responsividade de todas as imagens */
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+	width: 8px;
+}
+::-webkit-scrollbar-track {
+	background: var(--light-gray);
+}
+::-webkit-scrollbar-thumb {
+	background: var(--teal-primary);
+	border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: var(--teal-dark);
+}
+
+/* ===== UTILITY CLASSES ===== */
+.fade-in {
+	opacity: 0;
+	transform: translateY(20px);
+	transition:
+		opacity 0.6s ease,
+		transform 0.6s ease;
+}
+.fade-in.visible {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.btn-text-short {
+	display: none;
+}

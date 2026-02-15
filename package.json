@@ -1,0 +1,26 @@
+{
+	"name": "projeto-opine-node",
+	"version": "1.0.0",
+	"description": "Portal de notícias Opine Agora SC com SSR",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js",
+		"dev": "concurrently \"vite\" \"node --watch server.js\"",
+		"build": "vite build",
+		"preview": "vite preview"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"type": "module",
+	"dependencies": {
+		"@supabase/supabase-js": "^2.39.7",
+		"dotenv": "^16.4.1",
+		"ejs": "^3.1.9",
+		"express": "^5.2.1"
+	},
+	"devDependencies": {
+		"concurrently": "^8.2.2",
+		"vite": "^7.3.1"
+	}
+}

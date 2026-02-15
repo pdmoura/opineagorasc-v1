@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR">
+	<head>
+		<%- include('../partials/head', { 
+			title: 'Opine Agora SC - Opinião com Credibilidade',
+			description: 'Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência.',
+			image: '',
+			url: 'http://localhost:3000'
+		}) %>
+	</head>
+	<body>
+		<%- include('../partials/header') %>
+
+		<!-- MAIN CONTENT -->
+		<main class="main-container">
+			<!-- HERO SECTION -->
+			<section class="hero-section fade-in" id="heroSection">
+				<!-- Populated by JS -->
+			</section>
+
+			<!-- CONTENT + SIDEBAR -->
+			<div class="content-layout">
+				<div class="main-content">
+					<!-- Latest News -->
+					<div class="section-header">
+						<h2 class="section-title">Últimas Notícias</h2>
+						<a href="#" class="section-link">Ver todas →</a>
+					</div>
+					<div class="news-grid" id="newsGrid">
+						<!-- Populated by JS -->
+					</div>
+
+					<!-- Horizontal Cards -->
+					<div class="section-header">
+						<h2 class="section-title">Mais Notícias</h2>
+					</div>
+					<div id="moreNews">
+						<!-- Populated by JS -->
+					</div>
+				</div>
+
+				<!-- SIDEBAR -->
+				<aside class="sidebar">
+					<div class="sidebar-widget">
+						<h3 class="widget-title">Mais Lidas</h3>
+						<div id="mostRead">
+							<!-- Populated by JS -->
+						</div>
+					</div>
+
+					<div class="ad-banner">
+						<p>Publicidade</p>
+						<h3>Anuncie Aqui</h3>
+						<span>Entre em contato pelo WhatsApp</span>
+					</div>
+
+					<div class="sidebar-widget">
+						<h3 class="widget-title">Sobre o Editor</h3>
+						<div style="text-align: center">
+							<div
+								class="opinion-avatar"
+								style="
+									width: 70px;
+									height: 70px;
+									margin: 0 auto 12px;
+									font-size: 1.4rem;
+								"
+							>
+								CS
+							</div>
+							<h4
+								style="
+									font-family:
+										&quot;Montserrat&quot;, sans-serif;
+									font-size: 1rem;
+									font-weight: 700;
+									color: var(--text-primary);
+									margin-bottom: 4px;
+								"
+							>
+								Cristiano Soares
+							</h4>
+							<p
+								style="
+									font-size: 0.82rem;
+									color: var(--text-secondary);
+									margin-bottom: 12px;
+								"
+							>
+								Editor-chefe
+							</p>
+							<p
+								style="
+									font-size: 0.82rem;
+									color: var(--text-secondary);
+									line-height: 1.6;
+								"
+							>
+								Jornalista com foco em política e sociedade
+								catarinense. Comprometido com a informação
+								transparente e de qualidade.
+							</p>
+						</div>
+					</div>
+
+					<div class="ad-banner">
+						<p>Publicidade</p>
+						<h3>Espaço Disponível</h3>
+						<span>Seu anúncio pode estar aqui</span>
+					</div>
+				</aside>
+			</div>
+		</main>
+
+		<!-- OPINION SECTION -->
+		<section class="opinion-section fade-in">
+			<div class="opinion-container">
+				<div class="opinion-header">
+					<h2 class="section-title">
+						Colunas de <span>Opinião</span>
+					</h2>
+				</div>
+				<div class="opinion-grid" id="opinionGrid">
+					<!-- Populated by JS -->
+				</div>
+			</div>
+		</section>
+
+		<!-- ADS SECTION -->
+		<main class="main-container">
+			<section class="ads-section fade-in">
+				<div class="section-header">
+					<h2 class="section-title">Anúncios & Classificados</h2>
+					<a href="#" class="section-link">Ver todos →</a>
+				</div>
+				<div class="ads-grid" id="adsGrid">
+					<!-- Populated by JS -->
+				</div>
+			</section>
+
+			<!-- NEWSLETTER -->
+			<section class="newsletter-section fade-in">
+				<h2 class="newsletter-title">📬 Fique por dentro!</h2>
+				<p class="newsletter-text">
+					Receba as principais notícias de Santa Catarina direto no
+					seu e-mail.
+				</p>
+				<form
+					class="newsletter-form"
+					id="newsletterForm"
+				>
+					<input
+						type="email"
+						placeholder="Seu melhor e-mail"
+						required
+					/>
+					<button type="submit">Inscrever-se</button>
+				</form>
+			</section>
+		</main>
+
+		<%- include('../partials/footer') %>
+
+		<% if (typeof isDev !== 'undefined' && isDev) { %>
+			<script type="module" src="http://localhost:5173/@vite/client"></script>
+			<script type="module" src="http://localhost:5173/js/main-public.js"></script>
+		<% } else { %>
+			<script type="module" src="/dist/js/main-public.js"></script>
+		<% } %>
+	</body>
+</html>
