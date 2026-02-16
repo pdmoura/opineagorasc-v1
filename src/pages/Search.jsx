@@ -40,23 +40,31 @@ const SearchPage = () => {
 			// Apply search filter
 			if (query) {
 				supabaseQuery = supabaseQuery.or(
-					`title.ilike.%${query}%,content.ilike.%${query}%,excerpt.ilike.%${query}%`
+					`title.ilike.%${query}%,content.ilike.%${query}%,excerpt.ilike.%${query}%`,
 				);
 			}
 
 			// Apply sorting
 			switch (sortBy) {
 				case "latest":
-					supabaseQuery = supabaseQuery.order("created_at", { ascending: false });
+					supabaseQuery = supabaseQuery.order("created_at", {
+						ascending: false,
+					});
 					break;
 				case "oldest":
-					supabaseQuery = supabaseQuery.order("created_at", { ascending: true });
+					supabaseQuery = supabaseQuery.order("created_at", {
+						ascending: true,
+					});
 					break;
 				case "title":
-					supabaseQuery = supabaseQuery.order("title", { ascending: true });
+					supabaseQuery = supabaseQuery.order("title", {
+						ascending: true,
+					});
 					break;
 				default:
-					supabaseQuery = supabaseQuery.order("created_at", { ascending: false });
+					supabaseQuery = supabaseQuery.order("created_at", {
+						ascending: false,
+					});
 			}
 
 			const { data, error } = await supabaseQuery;
@@ -84,7 +92,9 @@ const SearchPage = () => {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-navy mb-4">Erro na Busca</h1>
+					<h1 className="text-2xl font-bold text-navy mb-4">
+						Erro na Busca
+					</h1>
 					<p className="text-gray-600 mb-6">{error}</p>
 					<Link to="/" className="btn-primary">
 						Voltar para a página inicial
@@ -98,15 +108,86 @@ const SearchPage = () => {
 		<>
 			<Helmet>
 				<title>
-					{query ? `Busca: ${query} - Opine Agora SC` : "Busca - Opine Agora SC"}
+					{query
+						? `Busca: "${query}" - Opine Agora SC | Notícias de Santa Catarina`
+						: "Buscar Notícias - Opine Agora SC | Portal de Jornalismo SC"}
 				</title>
 				<meta
 					name="description"
 					content={
 						query
+							? `Resultados da busca por "${query}" no Opine Agora SC. Encontre notícias sobre política, economia, sociedade, esportes e mais em Santa Catarina.`
+							: "Busque notícias no Opine Agora SC. Encontre informações sobre política, economia, sociedade, esportes, cultura e mais em Santa Catarina."
+					}
+				/>
+				<meta
+					name="keywords"
+					content={
+						query
+							? `${query}, Opine Agora SC, notícias Santa Catarina, busca, jornalismo SC, ${query} em Santa Catarina, ${query} Concórdia`
+							: "buscar notícias, Opine Agora SC, notícias Santa Catarina, jornalismo SC, busca de notícias, portal de notícias, Santa Catarina, SC"
+					}
+				/>
+				<meta
+					name="robots"
+					content={query ? "index, follow" : "noindex, follow"}
+				/>
+				<meta name="language" content="pt-BR" />
+				<link
+					rel="canonical"
+					href={`https://opineagorasc.com.br/search${query ? `?q=${encodeURIComponent(query)}` : ""}`}
+				/>
+
+				{/* Open Graph */}
+				<meta property="og:type" content="website" />
+				<meta
+					property="og:title"
+					content={
+						query
+							? `Busca: "${query}" - Opine Agora SC`
+							: "Buscar Notícias - Opine Agora SC"
+					}
+				/>
+				<meta
+					property="og:description"
+					content={
+						query
 							? `Resultados da busca por "${query}" no Opine Agora SC`
 							: "Busque notícias no Opine Agora SC"
 					}
+				/>
+				<meta
+					property="og:url"
+					content={`https://opineagorasc.com.br/search${query ? `?q=${encodeURIComponent(query)}` : ""}`}
+				/>
+				<meta property="og:site_name" content="Opine Agora SC" />
+				<meta
+					property="og:image"
+					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
+				/>
+				<meta property="og:locale" content="pt_BR" />
+
+				{/* Twitter Card */}
+				<meta name="twitter:card" content="summary" />
+				<meta
+					name="twitter:title"
+					content={
+						query
+							? `Busca: "${query}" - Opine Agora SC`
+							: "Buscar Notícias - Opine Agora SC"
+					}
+				/>
+				<meta
+					name="twitter:description"
+					content={
+						query
+							? `Resultados da busca por "${query}" no Opine Agora SC`
+							: "Busque notícias no Opine Agora SC"
+					}
+				/>
+				<meta
+					name="twitter:image"
+					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
 				/>
 			</Helmet>
 
@@ -121,11 +202,13 @@ const SearchPage = () => {
 					</div>
 					{query && (
 						<p className="text-lg text-gray-100">
-							Buscando por: <span className="font-semibold">"{query}"</span>
+							Buscando por:{" "}
+							<span className="font-semibold">"{query}"</span>
 						</p>
 					)}
 					<p className="text-lg text-gray-100 mt-2">
-						{posts.length} notícia{posts.length !== 1 ? "s" : ""} encontrada
+						{posts.length} notícia{posts.length !== 1 ? "s" : ""}{" "}
+						encontrada
 						{posts.length !== 1 ? "s" : ""}
 					</p>
 				</div>
@@ -134,7 +217,9 @@ const SearchPage = () => {
 				{posts.length > 0 && (
 					<div className="flex justify-end mb-6">
 						<div className="flex items-center space-x-2">
-							<span className="text-text-secondary">Ordenar por:</span>
+							<span className="text-text-secondary">
+								Ordenar por:
+							</span>
 							<select
 								value={sortBy}
 								onChange={(e) => setSortBy(e.target.value)}

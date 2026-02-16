@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { getClientIP } from "../lib/utils";
 import toast from "react-hot-toast";
 
 export const useComments = (postId, status = "approved") => {
@@ -55,36 +54,29 @@ export const useSubmitComment = () => {
 			return false;
 		}
 
-		if (name.trim().length < 2) {
-			toast.error("O nome deve ter pelo menos 2 caracteres.");
-			return false;
-		}
-
-		if (name.trim().length > 100) {
-			toast.error("O nome deve ter no máximo 100 caracteres.");
-			return false;
-		}
-
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailRegex.test(email)) {
-			toast.error("Por favor, insira um e-mail válido.");
-			return false;
-		}
-
-		if (content.trim().length < 10) {
-			toast.error("O comentário deve ter pelo menos 10 caracteres.");
-			return false;
-		}
-
-		if (content.trim().length > 2000) {
-			toast.error("O comentário deve ter no máximo 2000 caracteres.");
-			return false;
-		}
-
 		try {
 			setSubmitting(true);
 
-			// Insert comment with pending status
+			// Validação básica
+			if (!name?.trim() || !email?.trim() || !content?.trim()) {
+				throw new Error("Todos os campos são obrigatórios");
+			}
+
+			if (name.trim().length < 2) {
+				throw new Error("Nome deve ter pelo menos 2 caracteres");
+			}
+
+			if (content.trim().length < 10) {
+				throw new Error("Comentário deve ter pelo menos 10 caracteres");
+			}
+
+			// Validação de email simples
+			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			if (!emailRegex.test(email.trim())) {
+				throw new Error("Email inválido");
+			}
+
+			// Inserir comentário (RLS permite inserção anônima com status pending)
 			const { data: comment, error: insertError } = await supabase
 				.from("comments")
 				.insert({
@@ -97,13 +89,54 @@ export const useSubmitComment = () => {
 				.select()
 				.single();
 
-			if (insertError) throw insertError;
+			if (insertError) {
+				console.error("Supabase error:", insertError);
 
+				// Se for erro de permissão, mostrar mensagem específica sem sucesso
+				if (
+					insertError.code === "42501" ||
+					insertError.message.includes("row-level security")
+				) {
+					throw new Error(
+						"Não foi possível enviar o comentário. Verifique as permissões da tabela comments no Supabase.",
+					);
+				}
+
+				// Se for erro de constraint (rate limiting por e-mail)
+				if (
+					insertError.code === "23505" ||
+					insertError.message.includes("duplicate key") ||
+					insertError.message.includes("violates unique constraint")
+				) {
+					throw new Error(
+						"Você já comentou recentemente. Aguarde alguns minutos para comentar novamente.",
+					);
+				}
+
+				throw insertError;
+			}
+
+			// Só mostra sucesso se realmente inseriu no banco
 			toast.success("Comentário enviado para análise!");
 			return comment;
 		} catch (error) {
 			console.error("Error submitting comment:", error);
-			toast.error("Erro ao salvar comentário. Tente novamente.");
+
+			// Mensagens amigáveis para diferentes tipos de erro
+			let errorMessage = "Erro ao salvar comentário. Tente novamente.";
+
+			if (error.message.includes("permissões")) {
+				errorMessage = error.message;
+			} else if (error.message.includes("inválido")) {
+				errorMessage = error.message;
+			} else if (
+				error.message.includes("já comentou") ||
+				error.message.includes("recentemente")
+			) {
+				errorMessage = error.message;
+			}
+
+			toast.error(errorMessage);
 			return false;
 		} finally {
 			setSubmitting(false);

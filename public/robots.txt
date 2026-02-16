@@ -1,0 +1,61 @@
+# Robots.txt para Opine Agora SC
+# Otimizado para Motores de Busca e IAs
+
+User-agent: *
+Allow: /
+
+# Priorizar conteúdo importante
+Allow: /categoria/
+Allow: /post/
+Allow: /sobre
+Allow: /eleicoes
+Allow: /search
+Allow: /politica-privacidade
+Allow: /termos-uso
+
+# Bloquear áreas administrativas
+Disallow: /login
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+
+# Sitemap
+Sitemap: https://opineagorasc.com.br/sitemap.xml
+
+# AI Crawlers específicos
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: ChatGPT-User
+Allow: /
+Crawl-delay: 1
+
+User-agent: Google-Extended
+Allow: /
+Crawl-delay: 1
+
+User-agent: anthropic-ai
+Allow: /
+Crawl-delay: 1
+
+User-agent: Claude-Web
+Allow: /
+Crawl-delay: 1
+
+# Motores de busca tradicionais
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# Especificar tempo de espera para evitar sobrecarga
+Crawl-delay: 1

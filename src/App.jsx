@@ -10,7 +10,7 @@ import Eleicoes from "./pages/Eleicoes";
 import Sobre from "./pages/Sobre";
 import TodasCategorias from "./pages/TodasCategorias";
 import Search from "./pages/Search";
-import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
+import PoliticaTermos from "./pages/PoliticaTermos";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManagePosts from "./pages/admin/ManagePosts";
@@ -47,34 +47,156 @@ function App() {
 	return (
 		<div className="min-h-screen flex flex-col">
 			<Helmet>
-				<title>Opine Agora SC - Opinião com Credibilidade</title>
+				<title>
+					Opine Agora SC - Opinião com Credibilidade | Notícias de
+					Santa Catarina
+				</title>
 				<meta
 					name="description"
-					content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência."
+					content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência. Opine Agora SC - sua fonte confiável de notícias."
 				/>
 				<meta
 					name="keywords"
-					content="notícias, santa catarina, política, economia, opinião, jornalismo"
+					content="Opine Agora SC, Opine Agora, notícias Santa Catarina, jornalismo SC, política Santa Catarina, economia SC, Concórdia SC, notícias locais, portal de notícias, jornalismo online, opinião com credibilidade, Santa Catarina, SC, notícias em tempo real, política catarinense, economia catarinense"
 				/>
 				<meta name="author" content="Opine Agora SC" />
 				<meta
+					name="robots"
+					content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+				/>
+				<meta name="language" content="pt-BR" />
+				<meta name="geo.region" content="BR-SC" />
+				<meta
+					name="geo.placename"
+					content="Concórdia, Santa Catarina"
+				/>
+				<meta name="ICBM" content="-27.2344,-52.2752" />
+				<link rel="canonical" href="https://opineagorasc.com.br" />
+
+				{/* AI and Crawler Friendly */}
+				<meta name="referrer" content="no-referrer-when-downgrade" />
+				<meta name="format-detection" content="telephone=no" />
+				<meta name="mobile-web-app-capable" content="yes" />
+				<meta name="apple-mobile-web-app-capable" content="yes" />
+				<meta name="application-name" content="Opine Agora SC" />
+
+				{/* AI Discovery */}
+				<meta name="author" content="Opine Agora SC" />
+				<meta name="publisher" content="Opine Agora SC" />
+				<meta name="category" content="News, Journalism, Media" />
+				<meta name="coverage" content="Worldwide" />
+				<meta name="distribution" content="Global" />
+				<meta name="rating" content="General" />
+
+				{/* AI Friendly */}
+				<meta
+					name="ai-summary"
+					content="Portal de notícias de Santa Catarina com foco em jornalismo local, política, economia e opinião. Comprometido com a verdade e transparência."
+				/>
+				<meta
+					name="ai-context"
+					content="Jornalismo, Notícias, Santa Catarina, Política, Economia, Sociedade, Esportes, Cultura, Educação, Saúde"
+				/>
+
+				{/* Open Graph */}
+				<meta property="og:type" content="website" />
+				<meta
 					property="og:title"
-					content="Opine Agora SC - Opinião com Credibilidade"
+					content="Opine Agora SC - Opinião com Credibilidade | Notícias de Santa Catarina"
 				/>
 				<meta
 					property="og:description"
-					content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião."
+					content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência."
 				/>
-				<meta property="og:type" content="website" />
+				<meta property="og:url" content="https://opineagorasc.com.br" />
+				<meta property="og:site_name" content="Opine Agora SC" />
+				<meta
+					property="og:image"
+					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
+				/>
+				<meta property="og:image:width" content="1200" />
+				<meta property="og:image:height" content="630" />
+				<meta
+					property="og:image:alt"
+					content="Opine Agora SC - Portal de Notícias de Santa Catarina"
+				/>
+				<meta property="og:locale" content="pt_BR" />
+
+				{/* Twitter Card */}
 				<meta name="twitter:card" content="summary_large_image" />
 				<meta
 					name="twitter:title"
-					content="Opine Agora SC - Opinião com Credibilidade"
+					content="Opine Agora SC - Opinião com Credibilidade | Notícias de Santa Catarina"
 				/>
 				<meta
 					name="twitter:description"
-					content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião."
+					content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência."
 				/>
+				<meta
+					name="twitter:image"
+					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
+				/>
+				<meta
+					name="twitter:image:alt"
+					content="Opine Agora SC - Portal de Notícias de Santa Catarina"
+				/>
+
+				{/* Schema.org Structured Data - Enhanced for AI */}
+				<script type="application/ld+json">
+					{JSON.stringify({
+						"@context": "https://schema.org",
+						"@type": "NewsMediaOrganization",
+						name: "Opine Agora SC",
+						alternateName: "Opine Agora",
+						url: "https://opineagorasc.com.br",
+						logo: {
+							"@type": "ImageObject",
+							url: "https://opineagorasc.com.br/ogimage-opineagorasc.png",
+							width: 1200,
+							height: 630,
+						},
+						description:
+							"Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência.",
+						sameAs: ["https://opineagorasc.com.br"],
+						address: {
+							"@type": "PostalAddress",
+							addressLocality: "Concórdia",
+							addressRegion: "SC",
+							addressCountry: "BR",
+						},
+						contactPoint: {
+							"@type": "ContactPoint",
+							email: "contato@opineagora.com.br",
+							contactType: "customer service",
+						},
+						areaServed: {
+							"@type": "Place",
+							name: "Santa Catarina, Brazil",
+						},
+						knowsAbout: [
+							"Política de Santa Catarina",
+							"Economia Catarinense",
+							"Notícias Locais",
+							"Jornalismo Online",
+							"Sociedade Catarinense",
+							"Esportes em SC",
+							"Cultura em Santa Catarina",
+							"Educação SC",
+							"Saúde em Santa Catarina",
+						],
+						makesOffer: [
+							{
+								"@type": "Offer",
+								itemOffered: {
+									"@type": "Service",
+									name: "Notícias e Jornalismo",
+									description:
+										"Conteúdo jornalístico sobre Santa Catarina",
+								},
+							},
+						],
+					})}
+				</script>
 			</Helmet>
 
 			<Routes>
@@ -155,7 +277,11 @@ function App() {
 									/>
 									<Route
 										path="/politica-privacidade"
-										element={<PoliticaPrivacidade />}
+										element={<PoliticaTermos />}
+									/>
+									<Route
+										path="/termos-uso"
+										element={<PoliticaTermos />}
 									/>
 									{/* Fallback */}
 									<Route path="*" element={<Home />} />

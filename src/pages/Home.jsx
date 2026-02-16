@@ -126,11 +126,91 @@ const Home = () => {
 	return (
 		<>
 			<Helmet>
-				<title>Opine Agora SC - Opinião com Credibilidade</title>
+				<title>
+					Opine Agora SC - Notícias de Santa Catarina | Portal de
+					Jornalismo Online
+				</title>
 				<meta
 					name="description"
-					content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência."
+					content="Leia as últimas notícias de Santa Catarina no Opine Agora SC. Política, economia, sociedade, esportes, cultura e mais. Jornalismo local com credibilidade e transparência. Notícias em tempo real de Concórdia e todo o estado."
 				/>
+				<meta
+					name="keywords"
+					content="Opine Agora SC, notícias Santa Catarina, jornalismo SC, Concórdia SC, política catarinense, economia SC, esportes SC, cultura SC, notícias locais, portal de notícias, jornalismo online, Santa Catarina, SC, notícias em tempo real, opinião com credibilidade"
+				/>
+				<meta
+					name="robots"
+					content="index, follow, max-snippet:-1, max-image-preview:large"
+				/>
+				<meta name="language" content="pt-BR" />
+				<meta name="geo.region" content="BR-SC" />
+				<meta
+					name="geo.placename"
+					content="Concórdia, Santa Catarina"
+				/>
+				<link rel="canonical" href="https://opineagorasc.com.br" />
+
+				{/* Open Graph */}
+				<meta property="og:type" content="website" />
+				<meta
+					property="og:title"
+					content="Opine Agora SC - Notícias de Santa Catarina | Portal de Jornalismo Online"
+				/>
+				<meta
+					property="og:description"
+					content="Leia as últimas notícias de Santa Catarina no Opine Agora SC. Política, economia, sociedade, esportes, cultura e mais. Jornalismo local com credibilidade e transparência."
+				/>
+				<meta property="og:url" content="https://opineagorasc.com.br" />
+				<meta property="og:site_name" content="Opine Agora SC" />
+				<meta
+					property="og:image"
+					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
+				/>
+				<meta property="og:image:width" content="1200" />
+				<meta property="og:image:height" content="630" />
+				<meta property="og:locale" content="pt_BR" />
+
+				{/* Twitter Card */}
+				<meta name="twitter:card" content="summary_large_image" />
+				<meta
+					name="twitter:title"
+					content="Opine Agora SC - Notícias de Santa Catarina | Portal de Jornalismo Online"
+				/>
+				<meta
+					name="twitter:description"
+					content="Leia as últimas notícias de Santa Catarina no Opine Agora SC. Política, economia, sociedade, esportes, cultura e mais. Jornalismo local com credibilidade e transparência."
+				/>
+				<meta
+					name="twitter:image"
+					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
+				/>
+
+				{/* Schema.org Structured Data */}
+				<script type="application/ld+json">
+					{JSON.stringify({
+						"@context": "https://schema.org",
+						"@type": "WebSite",
+						name: "Opine Agora SC",
+						alternateName: "Opine Agora",
+						url: "https://opineagorasc.com.br",
+						description:
+							"Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência.",
+						potentialAction: {
+							"@type": "SearchAction",
+							target: "https://opineagorasc.com.br/search?q={search_term_string}",
+							"query-input": "required name=search_term_string",
+						},
+						publisher: {
+							"@type": "Organization",
+							name: "Opine Agora SC",
+							url: "https://opineagorasc.com.br",
+							logo: {
+								"@type": "ImageObject",
+								url: "https://opineagorasc.com.br/ogimage-opineagorasc.png",
+							},
+						},
+					})}
+				</script>
 			</Helmet>
 
 			{/* Hero Section */}
