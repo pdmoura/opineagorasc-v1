@@ -1,17 +1,53 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Eye, EyeOff, LogIn, Shield } from "lucide-react";
+import { Eye, EyeOff, LogIn, Shield, AlertCircle, Check } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import toast from "react-hot-toast";
+import { getFieldError, translateSupabaseError } from "../lib/validation";
 
 const Login = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [errors, setErrors] = useState({});
+	const [touched, setTouched] = useState({});
 	const navigate = useNavigate();
 	const location = useLocation();
+
+	// Validação de campos em tempo real
+	const validateField = (name, value) => {
+		return getFieldError(name, value);
+	};
+
+	const handleFieldChange = (name, value) => {
+		// Atualiza o valor do campo
+		if (name === "email") setEmail(value);
+		else if (name === "password") setPassword(value);
+
+		// Valida o campo se já foi tocado
+		if (touched[name]) {
+			setErrors((prev) => ({
+				...prev,
+				[name]: validateField(name, value),
+			}));
+		}
+	};
+
+	const handleFieldBlur = (name, value) => {
+		// Marca o campo como tocado
+		setTouched((prev) => ({
+			...prev,
+			[name]: true,
+		}));
+
+		// Valida o campo
+		setErrors((prev) => ({
+			...prev,
+			[name]: validateField(name, value),
+		}));
+	};
 
 	// Redirecionar se já estiver autenticado
 	useEffect(() => {
@@ -34,8 +70,23 @@ const Login = () => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 
-		if (!email || !password) {
-			toast.error("Por favor, preencha todos os campos.");
+		// Marca todos os campos como tocados
+		setTouched({ email: true, password: true });
+
+		// Valida todos os campos
+		const emailError = validateField("email", email);
+		const passwordError = validateField("password", password);
+
+		const newErrors = {
+			email: emailError,
+			password: passwordError,
+		};
+
+		setErrors(newErrors);
+
+		// Se houver erros, não envia o formulário
+		if (emailError || passwordError) {
+			toast.error("Por favor, corrija os erros no formulário.");
 			return;
 		}
 
@@ -58,10 +109,8 @@ const Login = () => {
 			navigate(from, { replace: true });
 		} catch (error) {
 			console.error("Login error:", error);
-			toast.error(
-				error.message ||
-					"Erro ao fazer login. Verifique suas credenciais.",
-			);
+			const translatedError = translateSupabaseError(error);
+			toast.error(translatedError);
 		} finally {
 			setLoading(false);
 		}
@@ -120,11 +169,37 @@ const Login = () => {
 									id="email"
 									type="email"
 									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-									className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+									onChange={(e) =>
+										handleFieldChange(
+											"email",
+											e.target.value,
+										)
+									}
+									onBlur={(e) =>
+										handleFieldBlur("email", e.target.value)
+									}
+									className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+										errors.email && touched.email
+											? "border-red-500 focus:ring-red-500"
+											: !errors.email && touched.email
+												? "border-green-500 focus:ring-green-500"
+												: "border-gray-300 focus:ring-teal-primary"
+									}`}
 									placeholder="seu@email.com"
 									required
 								/>
+								{errors.email && touched.email && (
+									<div className="flex items-center gap-1 mt-2 text-red-500 text-sm">
+										<AlertCircle className="w-4 h-4" />
+										<span>{errors.email}</span>
+									</div>
+								)}
+								{!errors.email && touched.email && email && (
+									<div className="flex items-center gap-1 mt-2 text-green-500 text-sm">
+										<Check className="w-4 h-4" />
+										<span>Email válido</span>
+									</div>
+								)}
 							</div>
 
 							{/* Password */}
@@ -143,9 +218,25 @@ const Login = () => {
 										}
 										value={password}
 										onChange={(e) =>
-											setPassword(e.target.value)
+											handleFieldChange(
+												"password",
+												e.target.value,
+											)
 										}
-										className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+										onBlur={(e) =>
+											handleFieldBlur(
+												"password",
+												e.target.value,
+											)
+										}
+										className={`w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+											errors.password && touched.password
+												? "border-red-500 focus:ring-red-500"
+												: !errors.password &&
+													  touched.password
+													? "border-green-500 focus:ring-green-500"
+													: "border-gray-300 focus:ring-teal-primary"
+										}`}
 										placeholder="••••••••"
 										required
 									/>
@@ -154,7 +245,7 @@ const Login = () => {
 										onClick={() =>
 											setShowPassword(!showPassword)
 										}
-										className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary hover:text-text-primary"
+										className="absolute right-2 top-1/2 transform -translate-y-1/2 text-text-secondary hover:text-text-primary z-20 p-1"
 										aria-label={
 											showPassword
 												? "Ocultar senha"
@@ -168,6 +259,21 @@ const Login = () => {
 										)}
 									</button>
 								</div>
+								{errors.password && touched.password && (
+									<div className="flex items-center gap-1 mt-2 text-red-500 text-sm">
+										<AlertCircle className="w-4 h-4" />
+										<span>{errors.password}</span>
+									</div>
+								)}
+								{!errors.password &&
+									touched.password &&
+									password &&
+									password.length >= 6 && (
+										<div className="flex items-center gap-1 mt-2 text-green-500 text-sm">
+											<Check className="w-4 h-4" />
+											<span>Senha válida</span>
+										</div>
+									)}
 							</div>
 
 							{/* Submit Button */}

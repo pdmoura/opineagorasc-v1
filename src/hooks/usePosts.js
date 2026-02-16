@@ -13,9 +13,25 @@ export const usePosts = (category = null, limit = null) => {
 				setLoading(true);
 				setError(null);
 
+				// Query otimizada com apenas campos necessários
 				let query = supabase
 					.from("posts")
-					.select("*")
+					.select(
+						`
+						id, 
+						title, 
+						excerpt, 
+						slug, 
+						category, 
+						tags,
+						author, 
+						date, 
+						image, 
+						featured,
+						view_count,
+						status
+					`,
+					)
 					.eq("status", "published")
 					.order("date", { ascending: false });
 
@@ -31,21 +47,26 @@ export const usePosts = (category = null, limit = null) => {
 
 				if (error) throw error;
 
-				// Process posts with optimized images
-				const processedPosts = data.map((post) => ({
-					...post,
-					image: post.image
-						? getOptimizedImageUrl(post.image, {
-								width: 400,
-								height: 250,
-							})
-						: null,
-				}));
+				// Process posts com optimized images de forma assíncrona
+				const processedPosts = await Promise.all(
+					data.map(async (post) => ({
+						...post,
+						image: post.image
+							? getOptimizedImageUrl(post.image, {
+									width: 400,
+									height: 250,
+									crop: "fill",
+									quality: "auto",
+									format: "auto",
+								})
+							: null,
+					})),
+				);
 
 				setPosts(processedPosts);
-			} catch (error) {
-				console.error("Error fetching posts:", error);
-				setError(error.message);
+			} catch (err) {
+				console.error("Error fetching posts:", err);
+				setError(err.message);
 			} finally {
 				setLoading(false);
 			}
@@ -119,9 +140,25 @@ export const useFeaturedPosts = (limit = 5) => {
 				setLoading(true);
 				setError(null);
 
+				// Query otimizada com apenas campos necessários
 				const { data, error } = await supabase
 					.from("posts")
-					.select("*")
+					.select(
+						`
+						id, 
+						title, 
+						excerpt, 
+						slug, 
+						category, 
+						tags,
+						author, 
+						date, 
+						image, 
+						featured,
+						view_count,
+						status
+					`,
+					)
 					.eq("status", "published")
 					.eq("featured", true)
 					.order("date", { ascending: false })
@@ -129,21 +166,26 @@ export const useFeaturedPosts = (limit = 5) => {
 
 				if (error) throw error;
 
-				// Process posts with optimized images
-				const processedPosts = data.map((post) => ({
-					...post,
-					image: post.image
-						? getOptimizedImageUrl(post.image, {
-								width: 600,
-								height: 350,
-							})
-						: null,
-				}));
+				// Process posts com optimized images de forma assíncrona
+				const processedPosts = await Promise.all(
+					data.map(async (post) => ({
+						...post,
+						image: post.image
+							? getOptimizedImageUrl(post.image, {
+									width: 600,
+									height: 350,
+									crop: "fill",
+									quality: "auto",
+									format: "auto",
+								})
+							: null,
+					})),
+				);
 
 				setPosts(processedPosts);
-			} catch (error) {
-				console.error("Error fetching featured posts:", error);
-				setError(error.message);
+			} catch (err) {
+				console.error("Error fetching featured posts:", err);
+				setError(err.message);
 			} finally {
 				setLoading(false);
 			}

@@ -27,6 +27,11 @@ const SearchPage = () => {
 		}
 	}, [query, sortBy]);
 
+	// Rolar para o topo quando a página de busca carregar
+	useEffect(() => {
+		window.scrollTo(0, 0);
+	}, [query]);
+
 	const fetchSearchResults = async () => {
 		try {
 			setLoading(true);

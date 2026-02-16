@@ -35,7 +35,7 @@ const PostForm = () => {
 
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
-	const [showPreview, setShowPreview] = useState(false);
+	const [tagsInput, setTagsInput] = useState("");
 	const [formData, setFormData] = useState({
 		title: "",
 		excerpt: "",
@@ -96,6 +96,7 @@ const PostForm = () => {
 				content: validContent,
 				tags: data.tags || [],
 			});
+			setTagsInput((data.tags || []).join(", "));
 		} catch (error) {
 			console.error("Error fetching post:", error);
 			toast.error("Erro ao carregar matéria");
@@ -121,6 +122,7 @@ const PostForm = () => {
 	};
 
 	const handleTagsChange = (value) => {
+		setTagsInput(value);
 		const tags = value
 			.split(",")
 			.map((tag) => tag.trim())
@@ -248,37 +250,26 @@ const PostForm = () => {
 				<div className="bg-white shadow-sm border-b border-gray-200">
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 						<div className="flex justify-between items-center py-4">
-							<div className="flex items-center space-x-4">
-								<button
-									onClick={() => navigate("/admin/posts")}
-									className="flex items-center space-x-2 text-text-secondary hover:text-text-primary"
-								>
-									<ArrowLeft className="w-4 h-4" />
-									<span>Voltar</span>
-								</button>
-								<div>
-									<h1 className="text-2xl font-bold text-navy">
-										{isEditing
-											? "Editar Matéria"
-											: "Nova Matéria"}
-									</h1>
-									<p className="text-text-secondary">
-										{formData.status === "published"
-											? "Publicado"
-											: "Rascunho"}
-									</p>
-								</div>
+							<div>
+								<h1 className="text-2xl font-bold text-navy">
+									{isEditing
+										? "Editar Matéria"
+										: "Nova Matéria"}
+								</h1>
+								<p className="text-text-secondary">
+									{formData.status === "published"
+										? "Publicado"
+										: "Rascunho"}
+								</p>
 							</div>
 
 							<div className="flex items-center space-x-2">
 								<button
-									onClick={() => setShowPreview(!showPreview)}
+									onClick={() => navigate("/admin/posts")}
 									className="btn-outline flex items-center space-x-2"
 								>
-									<Eye className="w-4 h-4" />
-									<span>
-										{showPreview ? "Editar" : "Visualizar"}
-									</span>
+									<ArrowLeft className="w-4 h-4" />
+									<span>Voltar</span>
 								</button>
 
 								<button
@@ -422,7 +413,7 @@ const PostForm = () => {
 									</label>
 									<input
 										type="text"
-										value={formData.tags.join(", ")}
+										value={tagsInput}
 										onChange={(e) =>
 											handleTagsChange(e.target.value)
 										}
@@ -477,7 +468,6 @@ const PostForm = () => {
 										JSON.stringify(blocks),
 									)
 								}
-								preview={showPreview}
 							/>
 						</div>
 

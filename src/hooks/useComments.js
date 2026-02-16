@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import toast from "react-hot-toast";
 
@@ -44,9 +44,18 @@ export const useComments = (postId, status = "approved") => {
 
 export const useSubmitComment = () => {
 	const [submitting, setSubmitting] = useState(false);
+	const submissionInProgress = useRef(false);
 
 	const submitComment = async (commentData) => {
 		const { post_id, name, email, content } = commentData;
+
+		// Prevenir envios duplicados
+		if (submissionInProgress.current) {
+			console.warn(
+				"Submission already in progress, preventing duplicate",
+			);
+			return false;
+		}
 
 		// Validation
 		if (!post_id || !name || !email || !content) {
@@ -55,6 +64,7 @@ export const useSubmitComment = () => {
 		}
 
 		try {
+			submissionInProgress.current = true;
 			setSubmitting(true);
 
 			// Validação básica
@@ -140,6 +150,7 @@ export const useSubmitComment = () => {
 			return false;
 		} finally {
 			setSubmitting(false);
+			submissionInProgress.current = false;
 		}
 	};
 

@@ -1,19 +1,51 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Opine Agora SC - Opinião com Credibilidade</title>
-    <meta name="description" content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência." />
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Opine Agora SC - Opinião com Credibilidade</title>
+		<meta
+			name="description"
+			content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência."
+		/>
+
+		<!-- DNS Prefetch -->
+		<link rel="dns-prefetch" href="//fonts.googleapis.com" />
+		<link rel="dns-prefetch" href="//fonts.gstatic.com" />
+		<link rel="dns-prefetch" href="//res.cloudinary.com" />
+
+		<!-- Google Fonts com preload otimizado -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+			rel="stylesheet"
+			media="print"
+			onload="this.media = 'all'"
+		/>
+
+		<!-- Service Worker -->
+		<script>
+			if ("serviceWorker" in navigator) {
+				window.addEventListener("load", () => {
+					navigator.serviceWorker
+						.register("/sw.js")
+						.then((registration) => {
+							console.log("SW registered: ", registration);
+						})
+						.catch((registrationError) => {
+							console.log(
+								"SW registration failed: ",
+								registrationError,
+							);
+						});
+				});
+			}
+		</script>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/main.jsx"></script>
+	</body>
 </html>

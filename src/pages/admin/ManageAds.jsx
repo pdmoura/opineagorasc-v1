@@ -11,6 +11,7 @@ import {
 	ArrowLeft,
 	Image as ImageIcon,
 	Filter,
+	Megaphone,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -101,11 +102,7 @@ const ManageAds = () => {
 	};
 
 	const deleteAd = async (adId) => {
-		if (
-			!confirm(
-				"Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita.",
-			)
-		) {
+		if (!window.confirm("Tem certeza que deseja excluir este anúncio?")) {
 			return;
 		}
 
@@ -125,61 +122,28 @@ const ManageAds = () => {
 		}
 	};
 
-	const getStatusBadge = (status) => {
-		const styles = {
-			approved: "bg-green-100 text-green-800",
-			draft: "bg-yellow-100 text-yellow-800",
-			archived: "bg-gray-100 text-gray-800",
-		};
-
-		const labels = {
-			approved: "Aprovado",
-			draft: "Rascunho",
-			archived: "Arquivado",
-		};
-
-		return (
-			<span
-				className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status] || styles.draft}`}
-			>
-				{labels[status] || "Rascunho"}
-			</span>
-		);
+	const handlePageChange = (page) => {
+		setCurrentPage(page);
 	};
 
-	const getCategoryBadge = (category) => {
-		const colors = {
-			imobiliario: "bg-blue-100 text-blue-800",
-			veiculos: "bg-green-100 text-green-800",
-			servicos: "bg-purple-100 text-purple-800",
-			produtos: "bg-orange-100 text-orange-800",
-			outros: "bg-gray-100 text-gray-800",
-		};
+	const filteredAds = ads.filter((ad) => {
+		const matchesSearch =
+			!searchTerm ||
+			ad.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			ad.content?.toLowerCase().includes(searchTerm.toLowerCase());
 
-		return (
-			<span
-				className={`px-2 py-1 text-xs font-medium rounded-full ${colors[category] || colors.outros}`}
-			>
-				{category || "Outros"}
-			</span>
-		);
-	};
+		const matchesStatus = filterStatus === "all" || ad.status === filterStatus;
 
-	if (loading && ads.length === 0) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-primary"></div>
-			</div>
-		);
-	}
+		return matchesSearch && matchesStatus;
+	});
 
 	return (
 		<>
 			<Helmet>
-				<title>Gerenciar Anúncios - Opine Agora SC</title>
+				<title>Gerenciar Anúncios - Admin</title>
 				<meta
 					name="description"
-					content="Gerenciamento de anúncios do portal Opine Agora SC"
+					content="Painel de gerenciamento de anúncios"
 				/>
 			</Helmet>
 
@@ -187,256 +151,182 @@ const ManageAds = () => {
 				{/* Header */}
 				<div className="bg-white shadow-sm border-b border-gray-200">
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-						<div className="flex items-center justify-between mb-6">
-							<div>
-								<h1 className="text-3xl font-bold text-navy">
-									Gerenciar Anúncios
-								</h1>
-								<p className="text-text-secondary mt-1">
-									Crie, edite e gerencie todos os anúncios do
-									portal
-								</p>
-							</div>
+						<div className="flex justify-between items-center py-4">
 							<div className="flex items-center space-x-4">
 								<Link
 									to="/admin"
-									className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+									className="flex items-center space-x-2 text-gray-600 hover:text-navy transition-colors"
 								>
-									<ArrowLeft className="w-4 h-4" />
+									<ArrowLeft className="w-5 h-5" />
 									<span>Voltar</span>
 								</Link>
-								<Link
-									to="/admin/ads/new"
-									className="btn-primary flex items-center space-x-2"
-								>
-									<Plus className="w-4 h-4" />
-									<span>Novo Anúncio</span>
-								</Link>
+								<h1 className="text-2xl font-bold text-navy">
+									Gerenciar Anúncios
+								</h1>
 							</div>
+							<Link
+								to="/admin/ads/new"
+								className="btn-primary flex items-center space-x-2"
+							>
+								<Plus className="w-5 h-5" />
+								<span>Novo Anúncio</span>
+							</Link>
 						</div>
 					</div>
 				</div>
 
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 					{/* Filters */}
-					<div className="bg-white rounded-lg shadow-md p-6 mb-6">
-						<div className="flex flex-col lg:flex-row gap-4">
-							{/* Search */}
+					<div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+						<div className="flex flex-col sm:flex-row gap-4">
 							<div className="flex-1">
 								<div className="relative">
-									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary" />
+									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
 									<input
 										type="text"
-										placeholder="Buscar por título ou conteúdo..."
+										placeholder="Buscar anúncios..."
 										value={searchTerm}
-										onChange={(e) => {
-											setSearchTerm(e.target.value);
-											setCurrentPage(1);
-										}}
-										className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+										onChange={(e) => setSearchTerm(e.target.value)}
+										className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-primary focus:border-transparent"
 									/>
 								</div>
 							</div>
-
-							{/* Status Filter */}
 							<div className="flex items-center space-x-2">
-								<Filter className="w-4 h-4 text-text-secondary" />
+								<Filter className="w-5 h-5 text-gray-500" />
 								<select
 									value={filterStatus}
-									onChange={(e) => {
-										setFilterStatus(e.target.value);
-										setCurrentPage(1);
-									}}
-									className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+									onChange={(e) => setFilterStatus(e.target.value)}
+									className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-primary focus:border-transparent"
 								>
-									<option value="all">Todos os status</option>
-									<option value="approved">Aprovado</option>
-									<option value="draft">Rascunho</option>
-									<option value="archived">Arquivado</option>
+									<option value="all">Todos</option>
+									<option value="approved">Ativos</option>
+									<option value="draft">Inativos</option>
 								</select>
 							</div>
 						</div>
 					</div>
 
-					{/* Ads Grid */}
-					<div className="bg-white rounded-lg shadow-md overflow-hidden">
-						{ads.length > 0 ? (
-							<>
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-									{ads.map((ad) => (
-										<div
-											key={ad.id}
-											className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
-										>
-											{/* Ad Image */}
-											{ad.image_url ? (
-												<div className="aspect-video bg-gray-100">
-													<img
-														src={ad.image_url}
-														alt={ad.title}
-														className="w-full h-full object-cover"
-														onError={(e) => {
-															e.target.style.display =
-																"none";
-															e.target.nextElementSibling.style.display =
-																"flex";
-														}}
-													/>
-													<div
-														className="aspect-video bg-gray-100 flex items-center justify-center"
-														style={{
-															display: "none",
-														}}
-													>
-														<ImageIcon className="w-12 h-12 text-gray-400" />
-													</div>
-												</div>
-											) : (
-												<div className="aspect-video bg-gray-100 flex items-center justify-center">
-													<ImageIcon className="w-12 h-12 text-gray-400" />
-												</div>
-											)}
-
-											{/* Ad Content */}
-											<div className="p-4">
-												<div className="flex items-start justify-between mb-2">
-													<h3 className="font-semibold text-navy line-clamp-2">
+					{/* Ads List */}
+					<div className="bg-white rounded-lg shadow-sm">
+						{loading ? (
+							<div className="flex items-center justify-center py-12">
+								<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-primary"></div>
+							</div>
+						) : filteredAds.length > 0 ? (
+							<div className="divide-y divide-gray-200">
+								{filteredAds.map((ad) => (
+									<div
+										key={ad.id}
+										className="p-6 hover:bg-gray-50 transition-colors"
+									>
+										<div className="flex items-start justify-between">
+											<div className="flex-1">
+												<div className="flex items-center space-x-3 mb-2">
+													<h3 className="text-lg font-semibold text-navy">
 														{ad.title}
 													</h3>
-													{getStatusBadge(ad.status)}
-												</div>
-
-												<p className="text-sm text-text-secondary line-clamp-3 mb-3">
-													{ad.content}
-												</p>
-
-												<div className="flex items-center justify-between mb-3">
-													<span className="text-xs text-text-secondary">
-														{format(
-															new Date(
-																ad.created_at,
-															),
-															"dd/MM/yyyy",
-															{ locale: ptBR },
-														)}
+													<span
+														className={`px-2 py-1 text-xs font-medium rounded-full ${
+															ad.status === "approved"
+																? "bg-green-100 text-green-800"
+																: "bg-gray-100 text-gray-800"
+														}`}
+													>
+														{ad.status === "approved"
+															? "Ativo"
+															: "Inativo"}
 													</span>
 												</div>
 
-												{ad.link_url && (
-													<p className="text-xs text-text-secondary mb-3 truncate">
-														<strong>Link:</strong>{" "}
-														{ad.link_url}
+												{ad.image_url && (
+													<img
+														src={ad.image_url}
+														alt={ad.title}
+														className="w-20 h-20 object-cover rounded-lg mb-3"
+													/>
+												)}
+
+												{ad.content && (
+													<p className="text-gray-600 mb-3 line-clamp-2">
+														{ad.content}
 													</p>
 												)}
 
-												{/* Actions */}
-												<div className="flex items-center justify-between pt-3 border-t border-gray-100">
-													<div className="flex items-center space-x-2">
-														{/* Toggle Status */}
-														<button
-															onClick={() =>
-																handleToggleStatus(
-																	ad,
-																)
-															}
-															disabled={loading}
-															className="p-2 rounded hover:bg-gray-100 transition-colors"
-															title={
-																ad.status ===
-																"approved"
-																	? "Desativar"
-																	: "Ativar"
-															}
+												{ad.link_url && (
+													<p className="text-sm text-teal-primary mb-3">
+														<a
+															href={ad.link_url}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="hover:underline"
 														>
-															{ad.status ===
-															"approved" ? (
-																<ToggleRight className="w-6 h-6 text-green-500" />
-															) : (
-																<ToggleLeft className="w-6 h-6 text-gray-400" />
-															)}
-														</button>
+															{ad.link_url}
+														</a>
+													</p>
+												)}
 
-														{/* Edit */}
-														<Link
-															to={`/admin/ads/edit/${ad.id}`}
-															className="p-2 rounded hover:bg-gray-100 transition-colors"
-															title="Editar"
-														>
-															<Edit2 className="w-5 h-5 text-text-secondary" />
-														</Link>
+												<p className="text-sm text-gray-500">
+													Criado em{" "}
+													{format(
+														new Date(ad.created_at),
+														"dd 'de' MMMM 'de' yyyy",
+														{ locale: ptBR },
+													)}
+												</p>
+											</div>
 
-														{/* Delete */}
-														<button
-															onClick={() =>
-																handleDeleteAd(
-																	ad,
-																)
-															}
-															disabled={loading}
-															className="p-2 rounded hover:bg-red-50 transition-colors"
-															title="Apagar"
-														>
-															<Trash2 className="w-5 h-5 text-red-500" />
-														</button>
-													</div>
+											{/* Actions */}
+											<div className="flex items-center justify-between pt-3 border-t border-gray-100">
+												<div className="flex items-center space-x-2">
+													{/* Toggle Status */}
+													<button
+														onClick={() =>
+															toggleAdStatus(
+																ad.id,
+																ad.status,
+															)
+														}
+														disabled={loading}
+														className="p-2 rounded hover:bg-gray-100 transition-colors"
+														title={
+															ad.status ===
+															"approved"
+																? "Desativar"
+																: "Ativar"
+														}
+													>
+														{ad.status ===
+														"approved" ? (
+															<ToggleLeft className="w-4 h-4 text-gray-600" />
+														) : (
+															<ToggleRight className="w-4 h-4 text-teal-primary" />
+														)}
+													</button>
+
+													{/* Edit */}
+													<Link
+														to={`/admin/ads/edit/${ad.id}`}
+														className="p-2 rounded hover:bg-gray-100 transition-colors"
+														title="Editar"
+													>
+														<Edit2 className="w-4 h-4 text-gray-600" />
+													</Link>
+
+													{/* Delete */}
+													<button
+														onClick={() => deleteAd(ad.id)}
+														disabled={loading}
+														className="p-2 rounded hover:bg-red-50 transition-colors"
+														title="Excluir"
+													>
+														<Trash2 className="w-4 h-4 text-red-600" />
+													</button>
 												</div>
 											</div>
 										</div>
-									))}
-								</div>
-
-								{/* Pagination */}
-								{totalPages > 1 && (
-									<div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
-										<div className="text-sm text-text-secondary">
-											Mostrando{" "}
-											{(currentPage - 1) * adsPerPage + 1}{" "}
-											a{" "}
-											{Math.min(
-												currentPage * adsPerPage,
-												ads.length,
-											)}{" "}
-											de {ads.length} anúncios
-										</div>
-										<div className="flex space-x-2">
-											<button
-												onClick={() =>
-													setCurrentPage(
-														Math.max(
-															1,
-															currentPage - 1,
-														),
-													)
-												}
-												disabled={currentPage === 1}
-												className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-											>
-												Anterior
-											</button>
-											<span className="px-3 py-1 text-sm">
-												Página {currentPage} de{" "}
-												{totalPages}
-											</span>
-											<button
-												onClick={() =>
-													setCurrentPage(
-														Math.min(
-															totalPages,
-															currentPage + 1,
-														),
-													)
-												}
-												disabled={
-													currentPage === totalPages
-												}
-												className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-											>
-												Próxima
-											</button>
-										</div>
 									</div>
-								)}
-							</>
+								))}
+							</div>
 						) : (
 							<div className="text-center py-12">
 								<Megaphone className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -458,6 +348,30 @@ const ManageAds = () => {
 							</div>
 						)}
 					</div>
+
+					{/* Pagination */}
+					{totalPages > 1 && (
+						<div className="mt-6 flex justify-center">
+							<div className="flex items-center space-x-2">
+								{Array.from(
+									{ length: totalPages },
+									(_, i) => i + 1,
+								).map((page) => (
+									<button
+										key={page}
+										onClick={() => handlePageChange(page)}
+										className={`px-3 py-2 rounded-lg ${
+											currentPage === page
+												? "bg-teal-primary text-white"
+												: "bg-white text-gray-700 hover:bg-gray-100"
+										} transition-colors`}
+									>
+										{page}
+									</button>
+								))}
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 		</>

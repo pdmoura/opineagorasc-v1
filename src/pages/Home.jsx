@@ -4,12 +4,12 @@ import { Helmet } from "react-helmet-async";
 import {
 	Newspaper,
 	TrendingUp,
-	MessageSquare,
 	Megaphone,
 	ChevronRight,
 	Mail,
 	Users,
 	Phone,
+	Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -22,7 +22,9 @@ const WhatsAppIcon = ({ className }) => (
 
 // Components
 import PostCard from "../components/public/PostCard";
+import SkeletonLoader from "../components/public/SkeletonLoader";
 import { usePosts, useFeaturedPosts } from "../hooks/usePosts";
+import { usePopularPosts } from "../hooks/usePostViews";
 import { formatDate } from "../lib/utils";
 import { supabase } from "../lib/supabase";
 import { useNewsletters } from "../hooks/useNewsletters";
@@ -43,6 +45,11 @@ const Home = () => {
 		loading: featuredLoading,
 		error: featuredError,
 	} = useFeaturedPosts(3);
+	const {
+		posts: popularPosts,
+		loading: popularLoading,
+		error: popularError,
+	} = usePopularPosts(5);
 
 	// Fetch approved ads
 	useEffect(() => {
@@ -93,7 +100,7 @@ const Home = () => {
 		}
 	};
 
-	if (postsLoading || featuredLoading || adsLoading) {
+	if (postsLoading || featuredLoading || adsLoading || popularLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="text-center">
@@ -101,14 +108,15 @@ const Home = () => {
 					<p className="text-gray-600">Carregando notícias...</p>
 					<p className="text-sm text-gray-500 mt-2">
 						Posts: {postsLoading ? "carregando" : "carregado"} |
-						Featured: {featuredLoading ? "carregando" : "carregado"}
+						Featured: {featuredLoading ? "carregando" : "carregado"}{" "}
+						| Popular: {popularLoading ? "carregando" : "carregado"}
 					</p>
 				</div>
 			</div>
 		);
 	}
 
-	if (postsError || featuredError) {
+	if (postsError || featuredError || popularError) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="text-center">
@@ -116,7 +124,7 @@ const Home = () => {
 						Erro ao carregar notícias
 					</p>
 					<p className="text-sm text-gray-600">
-						{postsError || featuredError}
+						{postsError || featuredError || popularError}
 					</p>
 				</div>
 			</div>
@@ -222,7 +230,7 @@ const Home = () => {
 								Informação com
 								<span className="text-orange-warm">
 									{" "}
-									Credibilidade
+									Credibilidade{" "}
 								</span>
 								para Santa Catarina
 							</h1>
@@ -239,29 +247,31 @@ const Home = () => {
 									<Newspaper className="w-5 h-5" />
 									<span>Últimas Notícias</span>
 								</Link>
-								<Link
-									to="/categoria/opiniao"
-									className="btn-outline border-white text-white hover:bg-white hover:text-navy inline-flex items-center justify-center space-x-2"
-								>
-									<MessageSquare className="w-5 h-5" />
-									<span>Colunas de Opinião</span>
-								</Link>
 							</div>
 						</div>
 
 						{/* Featured Posts */}
 						<div className="space-y-4">
-							{featuredPosts?.slice(0, 2).map((post, index) => (
-								<div
-									key={post.id}
-									className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors"
-								>
-									<PostCard
-										post={post}
-										variant="horizontal"
-									/>
-								</div>
-							))}
+							{featuredLoading ? (
+								<>
+									<SkeletonLoader type="horizontal" />
+									<SkeletonLoader type="horizontal" />
+								</>
+							) : (
+								featuredPosts
+									?.slice(0, 2)
+									.map((post, index) => (
+										<div
+											key={post.id}
+											className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors"
+										>
+											<PostCard
+												post={post}
+												variant="horizontal"
+											/>
+										</div>
+									))
+							)}
 						</div>
 					</div>
 				</div>
@@ -289,7 +299,14 @@ const Home = () => {
 							</div>
 
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-								{posts && posts.length > 0 ? (
+								{postsLoading ? (
+									<>
+										<SkeletonLoader type="card" />
+										<SkeletonLoader type="card" />
+										<SkeletonLoader type="card" />
+										<SkeletonLoader type="card" />
+									</>
+								) : posts && posts.length > 0 ? (
 									posts
 										?.slice(0, 4)
 										.map((post) => (
@@ -336,7 +353,7 @@ const Home = () => {
 									<span>Mais Lidas</span>
 								</h3>
 								<div className="space-y-4">
-									{posts?.slice(0, 5).map((post, index) => (
+									{popularPosts?.map((post, index) => (
 										<Link
 											key={post.id}
 											to={`/post/${post.slug || post.id}`}
@@ -352,9 +369,22 @@ const Home = () => {
 												<h4 className="font-semibold text-sm group-hover:text-teal-primary transition-colors line-clamp-2">
 													{post.title}
 												</h4>
-												<p className="text-xs text-text-secondary mt-1">
-													{formatDate(post.date)}
-												</p>
+												<div className="flex items-center space-x-2 mt-1">
+													<p className="text-xs text-text-secondary">
+														{formatDate(post.date)}
+													</p>
+													{post.view_count !==
+														undefined &&
+														post.view_count !==
+															null && (
+															<div className="flex items-center space-x-1">
+																<Eye className="w-3 h-3 text-text-secondary" />
+																<span className="text-xs text-text-secondary">
+																	{post.view_count.toLocaleString()}
+																</span>
+															</div>
+														)}
+												</div>
 											</div>
 										</Link>
 									))}
@@ -363,7 +393,7 @@ const Home = () => {
 						</div>
 
 						{/* Ad Banner */}
-						<div className="bg-gray-100 rounded-lg p-6 text-center">
+						<div className="bg-gray-100 rounded-lg p-6 text-center border-4 border-dotted border-gray-300">
 							<p className="text-sm text-text-secondary mb-2">
 								Publicidade
 							</p>
@@ -379,7 +409,7 @@ const Home = () => {
 						</div>
 
 						{/* Comunidade WhatsApp */}
-						<div className="card">
+						<div className="card border-4 border-teal-primary">
 							<div className="p-6 text-center">
 								<div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
 									<WhatsAppIcon className="w-8 h-8 text-white" />
@@ -442,13 +472,18 @@ const Home = () => {
 							>
 								{/* Ad Image */}
 								{ad.image_url ? (
-									<div className="aspect-video bg-gray-100">
+									<a
+										href={ad.link_url}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="aspect-video bg-gray-100 block"
+									>
 										<img
 											src={ad.image_url}
 											alt={ad.title}
 											className="w-full h-full object-cover"
 										/>
-									</div>
+									</a>
 								) : (
 									<div className="aspect-video bg-gray-100 flex items-center justify-center">
 										<Megaphone className="w-12 h-12 text-gray-400" />
@@ -457,23 +492,23 @@ const Home = () => {
 
 								{/* Ad Content */}
 								<div className="p-4">
-									<h3 className="font-semibold text-navy mb-2 line-clamp-2">
-										{ad.title}
-									</h3>
-									<p className="text-sm text-text-secondary line-clamp-3 mb-3">
-										{ad.content}
-									</p>
-
-									{ad.link_url && (
+									{ad.link_url ? (
 										<a
 											href={ad.link_url}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="inline-block mt-3 px-4 py-2 bg-teal-primary text-white text-sm rounded-lg hover:bg-teal-900 transition-colors"
+											className="font-semibold text-navy mb-2 line-clamp-2 block hover:text-teal-primary transition-colors"
 										>
-											Saiba Mais
+											{ad.title}
 										</a>
+									) : (
+										<h3 className="font-semibold text-navy mb-2 line-clamp-2">
+											{ad.title}
+										</h3>
 									)}
+									<p className="text-sm text-text-secondary line-clamp-3 mb-3">
+										{ad.content}
+									</p>
 								</div>
 							</div>
 						))}
@@ -494,11 +529,11 @@ const Home = () => {
 			</section>
 
 			{/* Newsletter Section */}
-			<section className="bg-teal-primary text-white py-16">
+			<section className="bg-gradient-to-br from-navy to-teal-primary text-white py-16">
 				<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 					<div className="flex justify-center mb-6">
 						<div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-							<Mail className="w-8 h-8" />
+							<Mail className="w-8 h-8 !text-orange-warm" />
 						</div>
 					</div>
 					<h2 className="text-3xl font-bold mb-4">
@@ -533,7 +568,7 @@ const Home = () => {
 								</>
 							) : (
 								<>
-									<Mail className="w-5 h-5" />
+									<Mail className="w-5 h-5 !text-orange-warm" />
 									<span>Inscrever-se</span>
 								</>
 							)}

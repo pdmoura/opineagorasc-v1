@@ -169,7 +169,7 @@ const Sobre = () => {
 											Localização
 										</p>
 										<p className="font-medium">
-											Florianópolis, SC
+											Concórdia, SC
 										</p>
 									</div>
 								</div>

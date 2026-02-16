@@ -1,12 +1,22 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Toaster } from "react-hot-toast";
+import { useSmoothScroll } from "./hooks/useSmoothScroll";
+
+// Configuração para eliminar warnings do React Router v7
+const routerConfig = {
+	future: {
+		v7_startTransition: true,
+		v7_relativeSplatPath: true,
+	},
+};
 
 // Pages
 import Home from "./pages/Home";
 import Post from "./pages/Post";
 import Category from "./pages/Category";
 import Eleicoes from "./pages/Eleicoes";
+import Concordia from "./pages/Concordia";
 import Sobre from "./pages/Sobre";
 import TodasCategorias from "./pages/TodasCategorias";
 import Search from "./pages/Search";
@@ -32,6 +42,7 @@ import { useAuth } from "./hooks/useAuth";
 
 function App() {
 	const { user, loading } = useAuth();
+	useSmoothScroll(); // Hook para scroll suave global
 
 	if (loading) {
 		return (
@@ -261,6 +272,10 @@ function App() {
 									<Route
 										path="/eleicoes"
 										element={<Eleicoes />}
+									/>
+									<Route
+										path="/concordia"
+										element={<Concordia />}
 									/>
 									<Route path="/sobre" element={<Sobre />} />
 									<Route

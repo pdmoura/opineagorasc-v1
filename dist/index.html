@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/assets/favicon-Dj8swPmF.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Opine Agora SC - Opinião com Credibilidade</title>
+		<meta
+			name="description"
+			content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência."
+		/>
+
+		<!-- DNS Prefetch -->
+		<link rel="dns-prefetch" href="//fonts.googleapis.com" />
+		<link rel="dns-prefetch" href="//fonts.gstatic.com" />
+		<link rel="dns-prefetch" href="//res.cloudinary.com" />
+
+		<!-- Google Fonts com preload otimizado -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+			rel="stylesheet"
+			media="print"
+			onload="this.media = 'all'"
+		/>
+
+		<!-- Service Worker -->
+		<script>
+			if ("serviceWorker" in navigator) {
+				window.addEventListener("load", () => {
+					navigator.serviceWorker
+						.register("/sw.js")
+						.then((registration) => {
+							console.log("SW registered: ", registration);
+						})
+						.catch((registrationError) => {
+							console.log(
+								"SW registration failed: ",
+								registrationError,
+							);
+						});
+				});
+			}
+		</script>
+		<script type="module" crossorigin src="/assets/js/index-Q7bDZU0J.js"></script>
+		<link rel="modulepreload" crossorigin href="/assets/js/router-DdS1UzJ2.js">
+		<link rel="modulepreload" crossorigin href="/assets/js/ui-cx7CGquX.js">
+		<link rel="modulepreload" crossorigin href="/assets/js/utils-CTQ5Pmvd.js">
+		<link rel="modulepreload" crossorigin href="/assets/js/supabase-DPYt5OOF.js">
+		<link rel="stylesheet" crossorigin href="/assets/index-DWN5ZP8C.css">
+	</head>
+	<body>
+		<div id="root"></div>
+	</body>
+</html>

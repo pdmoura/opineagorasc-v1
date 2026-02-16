@@ -18,18 +18,21 @@ import {
 // Hooks
 import { useAuth } from "../../hooks/useAuth";
 import { useAdminComments } from "../../hooks/useComments";
+import { useViewStats } from "../../hooks/usePostViews";
 import { supabase } from "../../lib/supabase";
 
 const AdminDashboard = () => {
 	const { user, signOut } = useAuth();
 	const { comments } = useAdminComments();
+	const { stats: viewStats, loading: viewStatsLoading } = useViewStats();
 	const [stats, setStats] = useState({
 		totalPosts: 0,
 		publishedPosts: 0,
 		pendingComments: 0,
 		totalComments: 0,
 		totalAds: 0,
-		recentViews: 0,
+		totalViews: 0,
+		averageViews: 0,
 		totalNewsletters: 0,
 	});
 	const [loading, setLoading] = useState(true);
@@ -73,8 +76,9 @@ const AdminDashboard = () => {
 							.length || 0,
 					totalComments: commentsCount.count || 0,
 					totalAds: adsCount.count || 0,
+					totalViews: viewStats.totalViews || 0,
+					averageViews: viewStats.averageViews || 0,
 					totalNewsletters: newslettersCount.count || 0,
-					recentViews: Math.floor(Math.random() * 10000) + 5000, // Simulated
 				});
 			} catch (error) {
 				console.error("Error fetching stats:", error);
@@ -83,8 +87,11 @@ const AdminDashboard = () => {
 			}
 		};
 
-		fetchStats();
-	}, [comments]);
+		// Only fetch when viewStats is loaded
+		if (!viewStatsLoading) {
+			fetchStats();
+		}
+	}, [comments, viewStats, viewStatsLoading]);
 
 	const statCards = [
 		{
@@ -102,6 +109,20 @@ const AdminDashboard = () => {
 			link: "/admin/posts",
 		},
 		{
+			title: "Total de Visualizações",
+			value: stats.totalViews.toLocaleString(),
+			icon: TrendingUp,
+			color: "bg-teal-500",
+			link: "#",
+		},
+		{
+			title: "Gerenciar Anúncios",
+			value: stats.totalAds,
+			icon: Megaphone,
+			color: "bg-indigo-500",
+			link: "/admin/ads",
+		},
+		{
 			title: "Comentários Pendentes",
 			value: stats.pendingComments,
 			icon: AlertCircle,
@@ -112,29 +133,15 @@ const AdminDashboard = () => {
 			title: "Inscritos na Newsletter",
 			value: stats.totalNewsletters,
 			icon: MessageSquare,
-			color: "bg-purple-500",
-			link: "/admin/newsletters",
-		},
-		{
-			title: "Anúncios",
-			value: stats.totalAds,
-			icon: Megaphone,
 			color: "bg-pink-500",
-			link: "/admin/ads",
-		},
-		{
-			title: "Visualizações Recentes",
-			value: stats.recentViews.toLocaleString(),
-			icon: TrendingUp,
-			color: "bg-teal-500",
-			link: "#",
+			link: "/admin/newsletters",
 		},
 	];
 
 	const recentComments =
 		comments?.slice(0, 5).filter((c) => c.status === "pending") || [];
 
-	if (loading) {
+	if (loading || viewStatsLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-primary"></div>
@@ -152,7 +159,7 @@ const AdminDashboard = () => {
 				/>
 			</Helmet>
 
-			<div className="min-h-screen bg-gray-50">
+			<div className="bg-gray-50">
 				{/* Header */}
 				<div className="bg-white shadow-sm border-b border-gray-200">
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -161,18 +168,14 @@ const AdminDashboard = () => {
 								<h1 className="text-2xl font-bold text-navy">
 									Dashboard Administrativo
 								</h1>
-								<p className="text-text-secondary">
-									Bem-vindo, {user?.email}
+								<p className="text-sm text-text-secondary">
+									Bem-vindo de volta! Aqui está um resumo da
+									sua aplicação.
 								</p>
 							</div>
 							<div className="flex items-center space-x-4">
 								<span className="text-sm text-text-secondary">
-									{new Date().toLocaleDateString("pt-BR", {
-										weekday: "long",
-										year: "numeric",
-										month: "long",
-										day: "numeric",
-									})}
+									{user?.email}
 								</span>
 								<button
 									onClick={handleLogout}
@@ -187,7 +190,7 @@ const AdminDashboard = () => {
 					</div>
 				</div>
 
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-0">
 					{/* Stats Grid */}
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 						{statCards.map((stat, index) => {
@@ -255,6 +258,23 @@ const AdminDashboard = () => {
 										</p>
 										<p className="text-sm text-text-secondary">
 											Adicionar novo anúncio
+										</p>
+									</div>
+								</Link>
+
+								<Link
+									to="/admin/ads"
+									className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+								>
+									<div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center">
+										<Megaphone className="w-5 h-5 text-white" />
+									</div>
+									<div>
+										<p className="font-medium text-navy">
+											Gerenciar Anúncios
+										</p>
+										<p className="text-sm text-text-secondary">
+											Ver e editar anúncios
 										</p>
 									</div>
 								</Link>
@@ -354,7 +374,7 @@ const AdminDashboard = () => {
 					</div>
 
 					{/* Recent Activity */}
-					<div className="mt-8 bg-white rounded-lg shadow-md p-6">
+					<div className="mt-8 bg-white rounded-lg shadow-md p-6 mb-0">
 						<h2 className="text-lg font-semibold text-navy mb-4">
 							Atividade Recente
 						</h2>

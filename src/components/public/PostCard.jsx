@@ -1,11 +1,39 @@
 import { Link } from "react-router-dom";
-import { Calendar, User, ArrowRight, MessageSquare } from "lucide-react";
+import { Calendar, User, ArrowRight, MessageSquare, Eye } from "lucide-react";
 import { formatDate, getPostUrl } from "../../lib/utils";
+import { useLazyImage } from "../../hooks/useLazyImage";
 
 const PostCard = ({ post, variant = "default" }) => {
-	const { id, title, excerpt, image, author, date, category, slug } = post;
+	const {
+		id,
+		title,
+		excerpt,
+		image,
+		author,
+		date,
+		category,
+		slug,
+		view_count,
+	} = post;
 
 	const postUrl = getPostUrl(slug || id);
+	const {
+		ref: imgRef,
+		src: optimizedSrc,
+		loading,
+		isLoaded,
+	} = useLazyImage(image, {
+		threshold: 0.1,
+		rootMargin: "50px",
+	});
+
+	// Format view count for display
+	const formatViewCount = (count) => {
+		if (!count || count === 0) return "0";
+		if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+		if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+		return count.toString();
+	};
 
 	const cardClasses = {
 		default: "card card-hover",
@@ -28,16 +56,25 @@ const PostCard = ({ post, variant = "default" }) => {
 	return (
 		<article className={cardClasses[variant]}>
 			{image && (
-				<Link to={postUrl} className="block overflow-hidden">
-					<img
-						src={image}
-						alt={title}
-						className={
-							imageClasses[variant] +
-							" transition-transform duration-300 hover:scale-105"
-						}
-						loading="lazy"
-					/>
+				<Link to={postUrl} className="block overflow-hidden relative">
+					<div className="relative">
+						<img
+							ref={imgRef}
+							src={optimizedSrc}
+							alt={title}
+							className={
+								imageClasses[variant] +
+								" transition-all duration-300 hover:scale-105 " +
+								(loading ? "opacity-0" : "opacity-100") +
+								(!isLoaded ? "blur-sm" : "")
+							}
+						/>
+						{loading && (
+							<div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+								<div className="w-8 h-8 border-2 border-gray-300 border-t-teal-primary rounded-full animate-spin"></div>
+							</div>
+						)}
+					</div>
 				</Link>
 			)}
 
@@ -46,7 +83,7 @@ const PostCard = ({ post, variant = "default" }) => {
 				{category && (
 					<Link
 						to={`/categoria/${encodeURIComponent(category.toLowerCase())}`}
-						className="inline-block px-3 py-1 bg-teal-primary text-white text-xs font-semibold rounded-full mb-3 hover:bg-teal-900 transition-colors"
+						className="inline-block px-3 py-1 bg-teal-600 text-white text-xs font-semibold rounded-full mb-3 hover:bg-teal-700 transition-colors"
 					>
 						{category}
 					</Link>
@@ -88,9 +125,18 @@ const PostCard = ({ post, variant = "default" }) => {
 						)}
 					</div>
 
-					{variant === "horizontal" && (
-						<ArrowRight className="w-4 h-4 text-teal-primary" />
-					)}
+					<div className="flex items-center space-x-2">
+						{view_count !== undefined && view_count !== null && (
+							<div className="flex items-center space-x-1">
+								<Eye className="w-3 h-3" />
+								<span>{formatViewCount(view_count)}</span>
+							</div>
+						)}
+
+						{variant === "horizontal" && (
+							<ArrowRight className="w-4 h-4 text-teal-primary" />
+						)}
+					</div>
 				</div>
 
 				{/* Read More Link for featured variant */}

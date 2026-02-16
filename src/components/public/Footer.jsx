@@ -90,7 +90,7 @@ const Footer = () => {
 			},
 			{
 				icon: MapPin,
-				text: "Florianópolis, SC",
+				text: "Concórdia, SC",
 				href: "#",
 			},
 		],
@@ -99,7 +99,7 @@ const Footer = () => {
 	const socialLinks = [
 		{
 			name: "Facebook",
-			href: "#",
+			href: "https://www.facebook.com/share/18GTHnk7hp/",
 			icon: Facebook,
 			color: "hover:bg-blue-600",
 		},
@@ -111,7 +111,7 @@ const Footer = () => {
 		},
 		{
 			name: "Instagram",
-			href: "#",
+			href: "https://www.instagram.com/opineagorasc.com.br?igsh=MWphcXI0dTNreDlyMw==",
 			icon: Instagram,
 			color: "hover:bg-pink-600",
 		},
@@ -130,76 +130,72 @@ const Footer = () => {
 	];
 
 	return (
-		<footer className="bg-navy text-white">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+		<footer className="bg-[var(--navy)] text-gray-200">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 					{/* Logo e Descrição */}
 					<div className="lg:col-span-1">
-						<div className="flex items-center space-x-3 mb-4">
-							<div className="w-10 h-10 bg-teal-primary rounded-lg flex items-center justify-center">
-								<span
-									className="text-white font-bold text-xl"
-									style={{
-										fontFamily: "Arial, sans-serif",
-										fontWeight: "900",
-										letterSpacing: "-0.05em",
-										textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-										transform: "scale(1.1)",
-									}}
-								>
-									OA
-								</span>
+						<div className="flex flex-col space-y-4">
+							<div className="flex items-center space-x-3">
+								<div className="bg-white rounded-lg p-3 shadow-lg">
+									<div className="flex flex-col items-start">
+										<div className="flex items-center gap-0.5">
+											<span className="font-montserrat text-xl font-black tracking-tight leading-none text-navy">
+												OPINE
+											</span>
+											<span className="font-montserrat text-xl font-black tracking-tight leading-none text-orange-warm">
+												AGORA
+											</span>
+											<span className="font-montserrat text-xs font-bold text-navy bg-cream px-1.5 py-0.5 rounded ml-1">
+												SC
+											</span>
+										</div>
+										<span className="font-montserrat text-xs text-navy tracking-widest uppercase font-semibold mt-1 block text-center">
+											Opinião com Credibilidade
+										</span>
+									</div>
+								</div>
 							</div>
-							<div>
-								<h3 className="text-xl font-bold">
-									Opine{" "}
-									<span className="text-orange-warm">
-										Agora
-									</span>{" "}
-									SC
-								</h3>
-								<p className="text-sm text-gray-300">
-									Opinião com Credibilidade
-								</p>
-							</div>
-						</div>
-						<p className="text-gray-300 text-sm leading-relaxed mb-6">
-							Portal de notícias de Santa Catarina comprometido
-							com a informação transparente, imparcial e de
-							qualidade para a sociedade catarinense.
-						</p>
 
-						{/* Redes Sociais */}
-						<div className="flex space-x-3">
-							{socialLinks.map((social) => {
-								const Icon = social.icon;
-								return (
-									<a
-										key={social.name}
-										href={social.href}
-										className={`w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center transition-colors ${social.color}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										aria-label={social.name}
-									>
-										<Icon className="w-5 h-5" />
-									</a>
-								);
-							})}
+							<p className="text-gray-200 text-sm leading-relaxed mb-4 font-medium">
+								Portal de notícias de Santa Catarina
+								comprometido com a informação transparente,
+								imparcial e de qualidade para a sociedade
+								catarinense.
+							</p>
+
+							{/* Redes Sociais */}
+							<div className="flex space-x-2">
+								{socialLinks.map((social) => {
+									const Icon = social.icon;
+									return (
+										<a
+											key={social.name}
+											href={social.href}
+											className={`w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center transition-colors ${social.color}`}
+											target="_blank"
+											rel="noopener noreferrer"
+											aria-label={social.name}
+										>
+											<Icon className="w-5 h-5 text-white" />
+										</a>
+									);
+								})}
+							</div>
 						</div>
 					</div>
 
 					{/* Navegação Principal */}
 					<div>
-						<h4 className="text-lg font-semibold mb-4 text-teal-primary">
+						<h4 className="text-base font-semibold mb-3 text-teal-300">
 							Navegação
 						</h4>
-						<ul className="space-y-2">
+						<ul className="space-y-1">
 							{navigation.principal.map((item) => (
 								<li key={item.name}>
 									<Link
 										to={item.href}
-										className="text-gray-300 hover:text-white transition-colors text-sm"
+										className="text-gray-200 hover:text-white transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-[var(--navy)] rounded"
 									>
 										{item.name}
 									</Link>
@@ -210,15 +206,15 @@ const Footer = () => {
 
 					{/* Empresa */}
 					<div>
-						<h4 className="text-lg font-semibold mb-4 text-teal-primary">
+						<h4 className="text-base font-semibold mb-3 text-teal-300">
 							Empresa
 						</h4>
-						<ul className="space-y-2">
+						<ul className="space-y-1">
 							{navigation.empresa.map((item) => (
 								<li key={item.name}>
 									<Link
 										to={item.href}
-										className="text-gray-300 hover:text-white transition-colors text-sm"
+										className="text-gray-200 hover:text-white transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-[var(--navy)] rounded"
 									>
 										{item.name}
 									</Link>
@@ -229,19 +225,19 @@ const Footer = () => {
 
 					{/* Contato */}
 					<div>
-						<h4 className="text-lg font-semibold mb-4 text-teal-primary">
+						<h4 className="text-base font-semibold mb-3 text-teal-300">
 							Contato
 						</h4>
-						<ul className="space-y-3">
+						<ul className="space-y-2">
 							{navigation.contato.map((item, index) => {
 								const Icon = item.icon;
 								return (
 									<li key={index}>
 										<a
 											href={item.href}
-											className="flex items-center space-x-3 text-gray-300 hover:text-white transition-colors text-sm"
+											className="flex items-center space-x-2 text-gray-200 hover:text-white transition-colors text-sm font-medium"
 										>
-											<Icon className="w-4 h-4 flex-shrink-0" />
+											<Icon className="w-3 h-3 flex-shrink-0" />
 											<span>{item.text}</span>
 										</a>
 									</li>
@@ -250,11 +246,11 @@ const Footer = () => {
 						</ul>
 
 						{/* Newsletter */}
-						<div className="mt-6">
-							<h5 className="text-sm font-semibold mb-2 text-teal-primary">
+						<div className="mt-4">
+							<h5 className="text-sm font-semibold mb-2 text-teal-300">
 								Newsletter
 							</h5>
-							<p className="text-xs text-gray-300 mb-3">
+							<p className="text-sm text-gray-200 mb-2 font-medium">
 								Receba as principais notícias no seu e-mail.
 							</p>
 							<form
@@ -268,14 +264,14 @@ const Footer = () => {
 									onChange={(e) =>
 										setNewsletterEmail(e.target.value)
 									}
-									className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent text-sm"
+									className="px-3 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent text-sm font-medium shadow-lg"
 									required
 									disabled={submitting}
 								/>
 								<button
 									type="submit"
 									disabled={submitting}
-									className="px-4 py-2 bg-teal-primary text-white rounded-md hover:bg-teal-900 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+									className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
 								>
 									{submitting ? (
 										<>
@@ -295,15 +291,17 @@ const Footer = () => {
 				</div>
 
 				{/* Copyright */}
-				<div className="border-t border-gray-700 mt-8 pt-8">
-					<div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
+				<div className="border-t border-blue-800 mt-6 pt-6">
+					<div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-200 font-medium">
 						<p>
-							© {currentYear} Opine{" "}
+							{currentYear} Opine{" "}
 							<span className="text-orange-warm">Agora</span> SC.
 							Todos os direitos reservados. | opineagorasc.com.br
 						</p>
-						<div className="flex items-center space-x-4 mt-4 md:mt-0">
-							<span>Desenvolvido com ❤️ para Santa Catarina</span>
+						<div className="flex items-center space-x-3 mt-2 md:mt-0">
+							<span>
+								<a href="https://www.linkedin.com/in/pedroalves0/" target="_blank" rel="noopener noreferrer">Desenvolvido por <span className="text-orange-warm border-b-2">Pedro Alves</span></a>
+							</span>
 						</div>
 					</div>
 				</div>

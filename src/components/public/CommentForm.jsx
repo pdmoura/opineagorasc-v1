@@ -1,11 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, User, Mail, Send, AlertCircle } from "lucide-react";
+import {
+	MessageSquare,
+	User,
+	Mail,
+	Send,
+	AlertCircle,
+	Check,
+} from "lucide-react";
 import toast from "react-hot-toast";
+import { getFieldError, validateEmail } from "../../lib/validation";
 
 const CommentForm = ({ postId, onSubmit, submitting }) => {
 	const [cooldownTime, setCooldownTime] = useState(0);
 	const [showCooldownMessage, setShowCooldownMessage] = useState(false);
 	const toastShownRef = useRef(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [errors, setErrors] = useState({});
+	const [touched, setTouched] = useState({});
 	const [formData, setFormData] = useState({
 		name: "",
 		email: "",
@@ -67,16 +78,49 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 		}
 	}, [cooldownTime]);
 
-	const handleChange = (e) => {
+	// Validação de campos em tempo real
+	const validateField = (name, value) => {
+		return getFieldError(name, value);
+	};
+
+	const handleFieldChange = (e) => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({
 			...prev,
 			[name]: value,
 		}));
+
+		// Valida o campo se já foi tocado
+		if (touched[name]) {
+			setErrors((prev) => ({
+				...prev,
+				[name]: validateField(name, value),
+			}));
+		}
+	};
+
+	const handleFieldBlur = (name, value) => {
+		// Marca o campo como tocado
+		setTouched((prev) => ({
+			...prev,
+			[name]: true,
+		}));
+
+		// Valida o campo
+		setErrors((prev) => ({
+			...prev,
+			[name]: validateField(name, value),
+		}));
 	};
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
+
+		// Prevenir envios duplicados no formulário
+		if (isSubmitting || submitting) {
+			console.warn("Form submission already in progress");
+			return;
+		}
 
 		// 1. PROTEÇÃO HONEYPOT: Se o campo oculto foi preenchido, é um BOT!
 		if (formData.website !== "") {
@@ -90,18 +134,43 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 			return;
 		}
 
+		// 3. VALIDAÇÃO DOS CAMPOS
+		// Marca todos os campos como tocados
+		setTouched({ name: true, email: true, content: true });
+
+		// Valida todos os campos
+		const nameError = validateField("name", formData.name);
+		const emailError = validateField("email", formData.email);
+		const contentError = validateField("content", formData.content);
+
+		const newErrors = {
+			name: nameError,
+			email: emailError,
+			content: contentError,
+		};
+
+		setErrors(newErrors);
+
+		// Se houver erros, não envia o formulário
+		if (nameError || emailError || contentError) {
+			toast.error("Por favor, corrija os erros no formulário.");
+			return;
+		}
+
 		try {
+			setIsSubmitting(true);
+
 			// Removemos o honeypot antes de enviar para a base de dados
 			const { website, ...dataToSubmit } = formData;
 
 			// Chama o hook e verifica se teve sucesso real
-			const success = await onSubmit({
+			const result = await onSubmit({
 				post_id: postId,
 				...dataToSubmit,
 			});
 
-			// Só mostra sucesso e ativa cooldown se realmente foi inserido no banco
-			if (success) {
+			// Verifica se o resultado é truthy (comentário inserido com sucesso)
+			if (result) {
 				// Salva o momento do comentário no navegador
 				localStorage.setItem("lastCommentTime", Date.now().toString());
 				setCooldownTime(5);
@@ -114,10 +183,15 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 					content: "",
 					website: "",
 				});
+				// Reset errors e touched
+				setErrors({});
+				setTouched({});
 			}
 		} catch (error) {
 			// Error é tratado no hook, mas mantemos try/catch por segurança
 			console.error("Error in form submission:", error);
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -145,7 +219,6 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 						</div>
 					</div>
 
-					{/* Botão desativado durante o cooldown */}
 					<button
 						type="button"
 						disabled={true}
@@ -157,7 +230,7 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 				</>
 			) : (
 				<form onSubmit={handleSubmit} className="space-y-4">
-					{/* HONEYPOT INVISÍVEL (Importante: opacity-0 e h-0 para esconder sem usar display:none, pois alguns bots ignoram display:none) */}
+					{/* HONEYPOT INVISÍVEL */}
 					<div
 						className="opacity-0 absolute h-0 w-0 overflow-hidden"
 						aria-hidden="true"
@@ -170,7 +243,7 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 							id="website"
 							name="website"
 							value={formData.website}
-							onChange={handleChange}
+							onChange={handleFieldChange}
 							tabIndex="-1"
 							autoComplete="off"
 						/>
@@ -186,20 +259,44 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 								Nome *
 							</label>
 							<div className="relative">
-								<User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary" />
+								<User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary z-20 pointer-events-none" />
 								<input
 									type="text"
 									id="name"
 									name="name"
 									value={formData.name}
-									onChange={handleChange}
-									className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+									onChange={handleFieldChange}
+									onBlur={(e) =>
+										handleFieldBlur("name", e.target.value)
+									}
+									className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+										errors.name && touched.name
+											? "border-red-500 focus:ring-red-500"
+											: !errors.name && touched.name
+												? "border-green-500 focus:ring-green-500"
+												: "border-gray-300 focus:ring-teal-primary"
+									}`}
 									placeholder="Seu nome"
 									required
 									minLength={2}
 									maxLength={100}
 								/>
 							</div>
+							{errors.name && touched.name && (
+								<div className="flex items-center gap-1 mt-2 text-red-500 text-sm">
+									<AlertCircle className="w-4 h-4" />
+									<span>{errors.name}</span>
+								</div>
+							)}
+							{!errors.name &&
+								touched.name &&
+								formData.name &&
+								formData.name.length >= 2 && (
+									<div className="flex items-center gap-1 mt-2 text-green-500 text-sm">
+										<Check className="w-4 h-4" />
+										<span>Nome válido</span>
+									</div>
+								)}
 						</div>
 
 						{/* Email */}
@@ -211,20 +308,44 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 								Email *
 							</label>
 							<div className="relative">
-								<Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary" />
+								<Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-secondary z-20 pointer-events-none" />
 								<input
 									type="email"
 									id="email"
 									name="email"
 									value={formData.email}
-									onChange={handleChange}
-									className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+									onChange={handleFieldChange}
+									onBlur={(e) =>
+										handleFieldBlur("email", e.target.value)
+									}
+									className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+										errors.email && touched.email
+											? "border-red-500 focus:ring-red-500"
+											: !errors.email && touched.email
+												? "border-green-500 focus:ring-green-500"
+												: "border-gray-300 focus:ring-teal-primary"
+									}`}
 									placeholder="seu@email.com"
 									required
 									minLength={5}
 									maxLength={255}
 								/>
 							</div>
+							{errors.email && touched.email && (
+								<div className="flex items-center gap-1 mt-2 text-red-500 text-sm">
+									<AlertCircle className="w-4 h-4" />
+									<span>{errors.email}</span>
+								</div>
+							)}
+							{!errors.email &&
+								touched.email &&
+								formData.email &&
+								validateEmail(formData.email) && (
+									<div className="flex items-center gap-1 mt-2 text-green-500 text-sm">
+										<Check className="w-4 h-4" />
+										<span>Email válido</span>
+									</div>
+								)}
 						</div>
 					</div>
 
@@ -240,14 +361,38 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 							id="content"
 							name="content"
 							value={formData.content}
-							onChange={handleChange}
+							onChange={handleFieldChange}
+							onBlur={(e) =>
+								handleFieldBlur("content", e.target.value)
+							}
 							rows={4}
-							className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent resize-none"
+							className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent resize-none transition-colors ${
+								errors.content && touched.content
+									? "border-red-500 focus:ring-red-500"
+									: !errors.content && touched.content
+										? "border-green-500 focus:ring-green-500"
+										: "border-gray-300 focus:ring-teal-primary"
+							}`}
 							placeholder="Digite seu comentário aqui..."
 							required
 							minLength={10}
 							maxLength={2000}
 						/>
+						{errors.content && touched.content && (
+							<div className="flex items-center gap-1 mt-2 text-red-500 text-sm">
+								<AlertCircle className="w-4 h-4" />
+								<span>{errors.content}</span>
+							</div>
+						)}
+						{!errors.content &&
+							touched.content &&
+							formData.content &&
+							formData.content.length >= 10 && (
+								<div className="flex items-center gap-1 mt-2 text-green-500 text-sm">
+									<Check className="w-4 h-4" />
+									<span>Comentário válido</span>
+								</div>
+							)}
 						<div className="text-right text-xs text-text-secondary mt-1">
 							{formData.content.length}/2000 caracteres
 						</div>
@@ -256,10 +401,10 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 					{/* Submit Button */}
 					<button
 						type="submit"
-						disabled={submitting}
+						disabled={submitting || isSubmitting}
 						className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						{submitting ? (
+						{submitting || isSubmitting ? (
 							<>
 								<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
 								<span>Enviando...</span>

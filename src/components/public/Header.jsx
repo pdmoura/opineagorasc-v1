@@ -14,6 +14,7 @@ const Header = () => {
 	const navigation = [
 		{ name: "Início", href: "/" },
 		{ name: "Eleições", href: "/eleicoes" },
+		{ name: "Concórdia", href: "/concordia" },
 		{ name: "Sobre", href: "/sobre" },
 		{ name: "Categorias", href: "/categoria/todas" },
 	];
@@ -39,6 +40,8 @@ const Header = () => {
 		if (searchQuery.trim()) {
 			navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
 			setIsSearchOpen(false);
+			// Rolar para o topo da página
+			window.scrollTo(0, 0);
 		}
 	};
 
@@ -48,29 +51,21 @@ const Header = () => {
 				<div className="flex justify-between items-center h-16">
 					{/* Logo */}
 					<Link to="/" className="flex items-center space-x-3">
-						<div className="w-10 h-10 bg-teal-primary rounded-lg flex items-center justify-center shadow-lg">
-							<span
-								className="text-white font-bold text-xl"
-								style={{
-									fontFamily: "Arial, sans-serif",
-									fontWeight: "900",
-									letterSpacing: "-0.05em",
-									textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-									transform: "scale(1.1)",
-								}}
-							>
-								OA
-							</span>
-						</div>
-						<div>
-							<h1 className="text-xl font-bold">
-								Opine{" "}
-								<span className="text-orange-warm">Agora</span>{" "}
-								<span className="text-orange-warm">OA</span> SC
-							</h1>
-							<p className="text-xs text-text-secondary">
+						<div className="flex flex-col items-start">
+							<div className="flex items-center gap-0.5">
+								<span className="font-montserrat text-lg sm:text-xl font-black tracking-tight leading-none text-navy">
+									OPINE
+								</span>
+								<span className="font-montserrat text-lg sm:text-xl font-black tracking-tight leading-none text-orange-warm">
+									AGORA
+								</span>
+								<span className="font-montserrat text-xs font-bold text-navy bg-cream px-1.5 py-0.5 rounded ml-1">
+									SC
+								</span>
+							</div>
+							<span className="font-montserrat text-xs text-navy tracking-widest uppercase font-semibold mt-1 block text-center">
 								Opinião com Credibilidade
-							</p>
+							</span>
 						</div>
 					</Link>
 
@@ -80,9 +75,9 @@ const Header = () => {
 							<Link
 								key={item.name}
 								to={item.href}
-								className={`text-sm font-medium transition-colors hover:text-teal-primary ${
+								className={`text-sm font-semibold transition-colors hover:text-teal-primary ${
 									isActive(item.href)
-										? "text-teal-primary"
+										? "text-[var(--teal-active)]"
 										: "text-text-primary"
 								}`}
 							>
@@ -137,9 +132,9 @@ const Header = () => {
 									key={item.name}
 									to={item.href}
 									onClick={() => setIsMenuOpen(false)}
-									className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+									className={`block px-3 py-2 rounded-md text-base font-semibold transition-colors ${
 										isActive(item.href)
-											? "text-teal-primary bg-teal-50"
+											? "text-[var(--teal-active)] bg-teal-50"
 											: "text-text-primary hover:bg-gray-100"
 									}`}
 								>
@@ -169,15 +164,7 @@ const Header = () => {
 										</div>
 									</button>
 								</>
-							) : (
-								<Link
-									to="/login"
-									onClick={() => setIsMenuOpen(false)}
-									className="block px-3 py-2 rounded-md text-base font-medium text-white bg-teal-primary hover:bg-teal-900"
-								>
-									Entrar
-								</Link>
-							)}
+							) : null}
 						</div>
 					</div>
 				)}

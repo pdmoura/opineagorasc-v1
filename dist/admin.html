@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dashboard Admin - Opine Agora SC</title>
+
+		<link rel="stylesheet" href="css/main.css" />
+		<link rel="stylesheet" href="css/components.css" />
+		<link rel="stylesheet" href="css/blocks.css" />
+		<link rel="stylesheet" href="css/admin.css" />
+		<link rel="stylesheet" href="css/admin-dashboard.css" />
+		<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+	</head>
+	<body class="admin-page">
+		<!-- ADMIN HEADER -->
+		<header class="admin-header">
+			<div class="admin-header-content">
+				<a href="/admin" class="admin-logo">
+					<div class="admin-logo-text">
+						<span class="logo-opine">OPINE</span>
+						<span class="logo-agora">AGORA</span>
+						<span class="logo-sc">SC</span>
+					</div>
+				</a>
+
+				<div class="admin-user-info">
+					<div class="admin-user-details">
+						<div class="admin-user-name">Cristiano Soares</div>
+						<div class="admin-user-role">Editor-chefe</div>
+					</div>
+					<div class="admin-avatar">CS</div>
+					<button class="btn-logout" onclick="adminLogout()">
+						Sair
+					</button>
+				</div>
+			</div>
+		</header>
+
+		<!-- ADMIN CONTAINER -->
+		<div class="admin-container">
+			<div class="admin-welcome">
+				<h1>🎛️ Painel Administrativo</h1>
+				<p>Gerencie postagens, anúncios e conteúdo do site</p>
+			</div>
+
+			<!-- ADMIN TABS -->
+			<div class="admin-tabs">
+				<button
+					class="admin-tab active"
+					onclick="switchTab('tabNewPost', this)"
+				>
+					➕ Nova Postagem
+				</button>
+				<button class="admin-tab" onclick="switchTab('tabNewAd', this)">
+					📢 Novo Anúncio
+				</button>
+				<button
+					class="admin-tab"
+					onclick="switchTab('tabManage', this)"
+				>
+					📋 Gerenciar
+				</button>
+			</div>
+
+			<!-- TAB: Nova Postagem -->
+			<div class="tab-content active" id="tabNewPost">
+				<form onsubmit="savePost(event)">
+					<input type="hidden" id="editPostId" value="" />
+
+					<div class="form-group">
+						<label>Título da Notícia</label>
+						<input
+							type="text"
+							id="postTitle"
+							placeholder="Digite o título da matéria..."
+							required
+						/>
+					</div>
+
+					<div class="form-row">
+						<div class="form-group">
+							<label>Categoria</label>
+							<select id="postCategory" required>
+								<option value="">Selecione...</option>
+								<option value="Política">Política</option>
+								<option value="Economia">Economia</option>
+								<option value="Educação">Educação</option>
+								<option value="Saúde">Saúde</option>
+								<option value="Esporte">Esporte</option>
+								<option value="Cultura">Cultura</option>
+								<option value="Opinião">Opinião</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label>Autor</label>
+							<input
+								type="text"
+								id="postAuthor"
+								value="Cristiano Soares"
+								required
+							/>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Resumo / Subtítulo</label>
+						<input
+							type="text"
+							id="postExcerpt"
+							placeholder="Breve resumo da notícia..."
+							required
+						/>
+					</div>
+
+					<div class="form-group">
+						<label>Conteúdo (Blocos)</label>
+						<div class="block-toolbar">
+							<button
+								type="button"
+								class="btn-block-add"
+								onclick="addBlock('capa')"
+							>
+								📷 Capa
+							</button>
+							<button
+								type="button"
+								class="btn-block-add"
+								onclick="addBlock('imageText')"
+							>
+								🖼️ Img+Texto
+							</button>
+							<button
+								type="button"
+								class="btn-block-add"
+								onclick="addBlock('fullImage')"
+							>
+								🖼️ Img Full
+							</button>
+							<button
+								type="button"
+								class="btn-block-add"
+								onclick="addBlock('video')"
+							>
+								🎥 Vídeo
+							</button>
+							<button
+								type="button"
+								class="btn-block-add"
+								onclick="addBlock('text')"
+							>
+								📝 Texto
+							</button>
+							<button
+								type="button"
+								class="btn-block-add"
+								onclick="addBlock('button')"
+							>
+								🔘 Botão
+							</button>
+							<button
+								type="button"
+								class="btn-block-add"
+								onclick="addBlock('ad')"
+							>
+								📢 Anúncio
+							</button>
+						</div>
+
+						<div id="blocksContainer" class="blocks-container">
+							<!-- Blocks will be injected here -->
+						</div>
+					</div>
+
+					<div class="form-actions">
+						<button
+							type="button"
+							class="btn-preview"
+							onclick="previewPost()"
+						>
+							👁️ Visualizar Prévia
+						</button>
+						<button
+							type="submit"
+							class="btn-primary"
+							id="postSubmitBtn"
+						>
+							📝 Publicar Notícia
+						</button>
+					</div>
+				</form>
+			</div>
+
+			<!-- TAB: Novo Anúncio -->
+			<div class="tab-content" id="tabNewAd">
+				<form onsubmit="saveAd(event)">
+					<input type="hidden" id="editAdId" value="" />
+
+					<div class="form-group">
+						<label>Título do Anúncio</label>
+						<input
+							type="text"
+							id="adTitle"
+							placeholder="Ex: Vende-se apartamento..."
+							required
+						/>
+					</div>
+
+					<div class="form-group">
+						<label>Descrição</label>
+						<textarea
+							id="adDescription"
+							placeholder="Detalhes do anúncio..."
+							required
+						></textarea>
+					</div>
+
+					<div class="form-row">
+						<div class="form-group">
+							<label>Contato</label>
+							<input
+								type="text"
+								id="adContact"
+								placeholder="Telefone ou WhatsApp"
+								required
+							/>
+						</div>
+
+						<div class="form-group">
+							<label>Categoria</label>
+							<select id="adCategory">
+								<option value="Imóveis">Imóveis</option>
+								<option value="Veículos">Veículos</option>
+								<option value="Empregos">Empregos</option>
+								<option value="Serviços">Serviços</option>
+								<option value="Diversos">Diversos</option>
+							</select>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Imagem (URL)</label>
+						<input
+							type="url"
+							id="adImage"
+							placeholder="https://exemplo.com/imagem.jpg"
+							oninput="previewImage(this.value, 'adImagePreview')"
+						/>
+						<img
+							id="adImagePreview"
+							class="image-preview"
+							alt="Preview"
+						/>
+					</div>
+
+					<button
+						type="submit"
+						class="btn-primary btn-orange"
+						id="adSubmitBtn"
+					>
+						📢 Publicar Anúncio
+					</button>
+				</form>
+			</div>
+
+			<!-- TAB: Gerenciar -->
+			<div class="tab-content" id="tabManage">
+				<h4
+					style="
+						font-family: &quot;Montserrat&quot;, sans-serif;
+						font-size: 0.9rem;
+						font-weight: 700;
+						margin-bottom: 16px;
+						color: var(--teal-primary);
+					"
+				>
+					📰 Notícias Publicadas
+				</h4>
+				<div class="admin-post-list" id="adminPostList">
+					<!-- Populated by JS -->
+				</div>
+
+				<h4
+					style="
+						font-family: &quot;Montserrat&quot;, sans-serif;
+						font-size: 0.9rem;
+						font-weight: 700;
+						margin: 28px 0 16px;
+						color: var(--orange-warm);
+					"
+				>
+					📢 Anúncios Publicados
+				</h4>
+				<div class="admin-post-list" id="adminAdList">
+					<!-- Populated by JS -->
+				</div>
+			</div>
+		</div>
+
+		<!-- PREVIEW MODAL -->
+		<div class="preview-modal" id="previewModal">
+			<div class="preview-content">
+				<div class="preview-header">
+					<h3>👁️ Visualização Prévia</h3>
+					<button class="preview-close" onclick="closePreview()">
+						✕
+					</button>
+				</div>
+				<div class="preview-body" id="previewContainer">
+					<!-- Preview will be rendered here -->
+				</div>
+			</div>
+		</div>
+
+		<!-- TOAST -->
+		<div class="toast" id="toast"></div>
+
+		<script type="module" src="js/main-admin.js"></script>
+	</body>
+</html>
