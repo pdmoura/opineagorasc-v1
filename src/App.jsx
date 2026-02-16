@@ -82,7 +82,7 @@ function App() {
 					content="Concórdia, Santa Catarina"
 				/>
 				<meta name="ICBM" content="-27.2344,-52.2752" />
-				<link rel="canonical" href="https://opineagorasc.com.br" />
+				<link rel="canonical" href="https://opineagorasc.vercel.app" />
 
 				{/* AI and Crawler Friendly */}
 				<meta name="referrer" content="no-referrer-when-downgrade" />
@@ -119,11 +119,11 @@ function App() {
 					property="og:description"
 					content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência."
 				/>
-				<meta property="og:url" content="https://opineagorasc.com.br" />
+				<meta property="og:url" content="https://opineagorasc.vercel.app" />
 				<meta property="og:site_name" content="Opine Agora SC" />
 				<meta
 					property="og:image"
-					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
+					content="https://opineagorasc.vercel.app/ogimage-opineagorasc.png"
 				/>
 				<meta property="og:image:width" content="1200" />
 				<meta property="og:image:height" content="630" />
@@ -145,7 +145,7 @@ function App() {
 				/>
 				<meta
 					name="twitter:image"
-					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
+					content="https://opineagorasc.vercel.app/ogimage-opineagorasc.png"
 				/>
 				<meta
 					name="twitter:image:alt"
@@ -159,10 +159,10 @@ function App() {
 						"@type": "NewsMediaOrganization",
 						name: "Opine Agora SC",
 						alternateName: "Opine Agora",
-						url: "https://opineagorasc.com.br",
+						url: "https://opineagorasc.vercel.app",
 						logo: {
 							"@type": "ImageObject",
-							url: "https://opineagorasc.com.br/ogimage-opineagorasc.png",
+							url: "https://opineagorasc.vercel.app/ogimage-opineagorasc.png",
 							width: 1200,
 							height: 630,
 						},

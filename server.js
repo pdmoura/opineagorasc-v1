@@ -1,4 +1,5 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -451,7 +452,6 @@ app.listen(port, () => {
 	console.log(`🎛️ Admin: http://localhost:${port}/admin`);
 	console.log(`Para parar o servidor, pressione Ctrl + C`);
 });
-
 
 // Exporta o app para a Vercel usar no formato Serverless
 export default app;
