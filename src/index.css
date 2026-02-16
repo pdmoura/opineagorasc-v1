@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --navy: #1a365d;
+    --teal-primary: #008080;
+    --orange-warm: #ff6b35;
+    --text-primary: #2d3748;
+    --text-secondary: #718096;
+    --bg-light: #f7fafc;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body {
+    @apply font-sans text-text-primary bg-white;
+    font-family: 'Montserrat', system-ui, sans-serif;
+  }
+
+  * {
+    @apply box-border;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-teal-primary text-white px-6 py-3 rounded-md font-semibold hover:bg-teal-900 transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-text-primary px-6 py-3 rounded-md font-semibold hover:bg-gray-300 transition-colors duration-200;
+  }
+
+  .btn-outline {
+    @apply border-2 border-teal-primary text-teal-primary px-6 py-3 rounded-md font-semibold hover:bg-teal-primary hover:text-white transition-colors duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply hover:shadow-lg hover:-translate-y-1;
+  }
+
+  .section-header {
+    @apply flex items-center justify-between mb-6 pb-3 border-b-2 border-teal-primary relative;
+  }
+
+  .section-header::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-16 h-2 bg-orange-warm;
+    transform: translateY(2px);
+  }
+
+  .section-title {
+    @apply font-bold text-xl text-navy uppercase tracking-wide;
+  }
+
+  .opinion-avatar {
+    @apply w-16 h-16 rounded-full bg-teal-primary text-white flex items-center justify-center text-xl font-bold;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

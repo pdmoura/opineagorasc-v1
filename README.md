@@ -1,52 +1,232 @@
-# 📰 Opine Agora SC
+# Opine Agora SC - React + Vite
 
-> Portal de notícias dinâmico focado em Santa Catarina com CMS avançado e moderação de comentários
+Portal de notícias de Santa Catarina construído com React, Vite, Tailwind CSS e Supabase.
 
-Um portal de notícias moderno construído com arquitetura monolítica, oferecendo um site público com Server-Side Rendering (SSR) para excelente indexação SEO e um painel administrativo completo para gestão de conteúdo.
+## 🚀 Stack Tecnológico
+
+- **Frontend**: React 18+ com Vite
+- **Routing**: React Router v6
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **State Management**: React Context API + Zustand
+- **Forms**: React Hook Form
+- **Database**: Supabase (PostgreSQL)
+- **Storage**: Cloudinary
+- **Authentication**: Supabase Auth
+- **Deployment**: Vercel
+
+## 📋 Funcionalidades
+
+### 🏠 Site Público
+
+- **Homepage**: Destaques, últimas notícias, colunas de opinião
+- **Categorias**: Política, Economia, Sociedade, Esportes, Cultura
+- **Matérias**: Leitura completa com sistema de comentários
+- **Compartilhamento**: WhatsApp, Facebook, Twitter, Telegram
+- **Design Responsivo**: Mobile-first approach
+- **SEO Otimizado**: Meta tags, Open Graph, JSON-LD
+
+### 💬 Sistema de Comentários
+
+- **Moderação**: Painel administrativo para aprovação
+- **Rate Limiting**: 10 comentários por IP a cada 24 horas
+- **Validação**: Client-side e server-side
+- **Notificações**: Toast notifications para feedback
+
+### 🎛️ Painel Administrativo
+
+- **Autenticação**: Login seguro com Supabase Auth
+- **Gestão de Matérias**: CRUD completo com editor de blocos
+- **Moderação**: Aprovação/rejeição de comentários
+- **Anúncios**: Sistema de gestão de publicidade
+- **Dashboard**: Estatísticas e informações rápidas
+
+### 📝 Editor de Blocos (CMS)
+
+- **Tipos de Bloco**:
+    - Capa (imagem + título)
+    - Texto (rich text)
+    - Imagem Completa
+    - Imagem + Texto (lado a lado)
+    - Vídeo YouTube
+    - Botões (CTA)
+    - Anúncios (AdSense)
+- **Drag & Drop**: Reorganização de blocos
+- **Preview**: Visualização em tempo real
+- **Auto-save**: Salvamento automático
+
+## 🛠️ Instalação e Configuração
+
+### Pré-requisitos
+
+- Node.js 18+
+- npm ou yarn
+
+### 1. Clone o repositório
+
+```bash
+git clone <repository-url>
+cd opine-agora-sc-react
+```
+
+### 2. Instale as dependências
+
+```bash
+npm install
+```
+
+### 3. Configure as variáveis de ambiente
+
+Copie o arquivo `.env.example` para `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+Configure as variáveis:
+
+```env
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset
+```
+
+### 4. Configure o banco de dados
+
+Execute as migrações SQL no seu Supabase na ordem correta:
+
+1. **Adicionar coluna slug**:
+
+```sql
+-- Execute o conteúdo do arquivo: sql-migrations/add_slug_column.sql
+```
+
+2. **Adicionar colunas de status**:
+
+```sql
+-- Execute o conteúdo do arquivo: sql-migrations/add_comment_status.sql
+-- Execute o conteúdo do arquivo: sql-migrations/add_ads_columns.sql
+```
+
+3. **Configurar RLS Policies**:
+
+```sql
+-- Execute o conteúdo do arquivo: sql-migrations/rls_policies.sql
+```
+
+### 5. Execute o projeto
+
+```bash
+npm run dev
+```
+
+Abra http://localhost:5173 no seu navegador.
+
+## � Estrutura do Projeto
+
+```
+src/
+├── components/
+│   ├── admin/          # Componentes administrativos
+│   ├── public/         # Componentes públicos
+│   └── shared/         # Componentes compartilhados
+├── pages/              # Páginas da aplicação
+│   ├── admin/         # Páginas administrativas
+│   ├── Home.jsx       # Homepage
+│   ├── Post.jsx       # Página da matéria
+│   ├── Category.jsx   # Página de categoria
+│   └── Login.jsx      # Página de login
+├── hooks/             # Hooks customizados
+├── lib/               # Utilitários e configurações
+├── context/           # Context providers
+├── App.jsx            # Componente principal
+├── main.jsx           # Entry point
+└── index.css          # Estilos globais
+```
+
+## 🎨 Personalização
+
+### Cores e Tema
+
+As cores principais estão definidas no `tailwind.config.js`:
+
+- `navy`: #1a365d
+- `teal-primary`: #008080
+- `orange-warm`: #ff6b35
+
+### Componentes
+
+- **PostCard**: Card de matéria com múltiplas variantes
+- **Header**: Navegação responsiva com busca
+- **Footer**: Links sociais e newsletter
+- **CommentForm**: Formulário de comentários
+- **CommentList**: Lista de comentários aprovados
+
+## 🔧 Scripts Disponíveis
+
+```bash
+npm run dev          # Inicia servidor de desenvolvimento
+npm run build        # Build para produção
+npm run preview      # Preview do build
+npm run lint         # Linting do código
+```
+
+## � Deploy
+
+### Vercel (Recomendado)
+
+1. Conecte seu repositório ao Vercel
+2. Configure as variáveis de ambiente no painel
+3. Deploy automático em cada push para main
+
+### Outras plataformas
+
+O projeto pode ser deployado em qualquer plataforma que suporte React/Vite:
+
+- Netlify
+- Railway
+- DigitalOcean App Platform
+- AWS Amplify
+
+## � Segurança
+
+- **RLS (Row Level Security)**: Políticas de acesso no Supabase
+- **Rate Limiting**: Proteção contra spam de comentários
+- **Input Validation**: Validação client-side e server-side
+- **XSS Protection**: Sanitização de inputs
+- **HTTPS**: Forçado em produção
+
+## � Performance
+
+- **Code Splitting**: Lazy loading de componentes
+- **Image Optimization**: Cloudinary transformations
+- **Debouncing**: Inputs de busca e filtros
+- **Caching**: Estratégias de cache do browser
+- **Minification**: Build otimizado para produção
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -am 'Add nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está licenciado sob a ISC License.
+
+## 📞 Suporte
+
+Para dúvidas ou suporte:
+
+- Email: contato@opineagora.com.br
+- Issues no GitHub
 
 ---
 
-## 🚀 Funcionalidades
-
-### 📝 Editor de Blocos Dinâmico (CMS)
-
-- Sistema avançado de criação de matérias com blocos modulares
-- Tipos de blocos: Capa, Texto, Imagem Full, Imagem+Texto, Vídeo YouTube, Anúncios AdSense, Botões
-- Estrutura de conteúdo salva em JSON no banco de dados
-- Drag-and-drop para reordenação de blocos
-- Preview em tempo real
-
-### 💬 Sistema de Comentários com Moderação
-
-- Comentários públicos com validação client-side e server-side
-- Rate Limit por IP (máximo 10 comentários a cada 24 horas)
-- Painel de moderação completo: Aprovar, Rejeitar ou Remover
-- Contador de comentários pendentes no admin
-- Notificações toast para feedback imediato
-
-### 📢 Gestão de Anúncios
-
-- Criação e gerenciamento de áreas publicitárias
-- Categorização de anúncios
-- Upload de imagens via Cloudinary
-
-### 🔗 Compartilhamento Social
-
-- Links dinâmicos para WhatsApp, Facebook, X (Twitter) e Telegram
-- URLs otimizadas com título e link da matéria
-
-### 🔐 Painel Administrativo
-
-- Interface intuitiva para gestão completa
-- Gerenciamento de posts e anúncios
-- Moderação de comentários (pendentes e aprovados)
-- Sistema de autenticação via Supabase
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-### Backend
+**Desenvolvido com ❤️ para Santa Catarina**
 
 - **Node.js** - Runtime JavaScript
 - **Express.js** - Framework web minimalista

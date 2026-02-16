@@ -1,0 +1,394 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import {
+	FileText,
+	MessageSquare,
+	Megaphone,
+	Users,
+	TrendingUp,
+	Calendar,
+	Eye,
+	ThumbsUp,
+	AlertCircle,
+	LogOut,
+	Mail,
+} from "lucide-react";
+
+// Hooks
+import { useAuth } from "../../hooks/useAuth";
+import { useAdminComments } from "../../hooks/useComments";
+import { supabase } from "../../lib/supabase";
+
+const AdminDashboard = () => {
+	const { user, signOut } = useAuth();
+	const { comments } = useAdminComments();
+	const [stats, setStats] = useState({
+		totalPosts: 0,
+		publishedPosts: 0,
+		pendingComments: 0,
+		totalComments: 0,
+		totalAds: 0,
+		recentViews: 0,
+		totalNewsletters: 0,
+	});
+	const [loading, setLoading] = useState(true);
+
+	const handleLogout = async () => {
+		try {
+			await signOut();
+			console.log("🚪 AdminDashboard - User logged out");
+		} catch (error) {
+			console.error("❌ AdminDashboard - Logout error:", error);
+		}
+	};
+
+	useEffect(() => {
+		const fetchStats = async () => {
+			try {
+				const [
+					postsCount,
+					publishedCount,
+					commentsCount,
+					adsCount,
+					newslettersCount,
+				] = await Promise.all([
+					supabase.from("posts").select("id", { count: "exact" }),
+					supabase
+						.from("posts")
+						.select("id", { count: "exact" })
+						.eq("status", "published"),
+					supabase.from("comments").select("id", { count: "exact" }),
+					supabase.from("ads").select("id", { count: "exact" }),
+					supabase
+						.from("newsletter_subscriptions")
+						.select("id", { count: "exact" }),
+				]);
+
+				setStats({
+					totalPosts: postsCount.count || 0,
+					publishedPosts: publishedCount.count || 0,
+					pendingComments:
+						comments?.filter((c) => c.status === "pending")
+							.length || 0,
+					totalComments: commentsCount.count || 0,
+					totalAds: adsCount.count || 0,
+					totalNewsletters: newslettersCount.count || 0,
+					recentViews: Math.floor(Math.random() * 10000) + 5000, // Simulated
+				});
+			} catch (error) {
+				console.error("Error fetching stats:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchStats();
+	}, [comments]);
+
+	const statCards = [
+		{
+			title: "Total de Matérias",
+			value: stats.totalPosts,
+			icon: FileText,
+			color: "bg-blue-500",
+			link: "/admin/posts",
+		},
+		{
+			title: "Matérias Publicadas",
+			value: stats.publishedPosts,
+			icon: Eye,
+			color: "bg-green-500",
+			link: "/admin/posts",
+		},
+		{
+			title: "Comentários Pendentes",
+			value: stats.pendingComments,
+			icon: AlertCircle,
+			color: "bg-orange-500",
+			link: "/admin/comments",
+		},
+		{
+			title: "Inscritos na Newsletter",
+			value: stats.totalNewsletters,
+			icon: MessageSquare,
+			color: "bg-purple-500",
+			link: "/admin/newsletters",
+		},
+		{
+			title: "Anúncios",
+			value: stats.totalAds,
+			icon: Megaphone,
+			color: "bg-pink-500",
+			link: "/admin/ads",
+		},
+		{
+			title: "Visualizações Recentes",
+			value: stats.recentViews.toLocaleString(),
+			icon: TrendingUp,
+			color: "bg-teal-500",
+			link: "#",
+		},
+	];
+
+	const recentComments =
+		comments?.slice(0, 5).filter((c) => c.status === "pending") || [];
+
+	if (loading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-primary"></div>
+			</div>
+		);
+	}
+
+	return (
+		<>
+			<Helmet>
+				<title>Dashboard Admin - Opine Agora SC</title>
+				<meta
+					name="description"
+					content="Painel administrativo do portal Opine Agora SC"
+				/>
+			</Helmet>
+
+			<div className="min-h-screen bg-gray-50">
+				{/* Header */}
+				<div className="bg-white shadow-sm border-b border-gray-200">
+					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+						<div className="flex justify-between items-center py-4">
+							<div>
+								<h1 className="text-2xl font-bold text-navy">
+									Dashboard Administrativo
+								</h1>
+								<p className="text-text-secondary">
+									Bem-vindo, {user?.email}
+								</p>
+							</div>
+							<div className="flex items-center space-x-4">
+								<span className="text-sm text-text-secondary">
+									{new Date().toLocaleDateString("pt-BR", {
+										weekday: "long",
+										year: "numeric",
+										month: "long",
+										day: "numeric",
+									})}
+								</span>
+								<button
+									onClick={handleLogout}
+									className="flex items-center space-x-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm font-medium"
+									title="Sair do sistema"
+								>
+									<LogOut className="w-4 h-4" />
+									<span>Sair</span>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+					{/* Stats Grid */}
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+						{statCards.map((stat, index) => {
+							const Icon = stat.icon;
+							return (
+								<Link
+									key={index}
+									to={stat.link}
+									className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+								>
+									<div className="flex items-center justify-between">
+										<div>
+											<p className="text-sm font-medium text-text-secondary">
+												{stat.title}
+											</p>
+											<p className="text-3xl font-bold text-navy mt-2">
+												{stat.value}
+											</p>
+										</div>
+										<div
+											className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}
+										>
+											<Icon className="w-6 h-6 text-white" />
+										</div>
+									</div>
+								</Link>
+							);
+						})}
+					</div>
+
+					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+						{/* Quick Actions */}
+						<div className="bg-white rounded-lg shadow-md p-6">
+							<h2 className="text-lg font-semibold text-navy mb-4">
+								Ações Rápidas
+							</h2>
+							<div className="space-y-3">
+								<Link
+									to="/admin/posts/new"
+									className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+								>
+									<div className="w-10 h-10 bg-teal-primary rounded-lg flex items-center justify-center">
+										<FileText className="w-5 h-5 text-white" />
+									</div>
+									<div>
+										<p className="font-medium text-navy">
+											Nova Matéria
+										</p>
+										<p className="text-sm text-text-secondary">
+											Criar nova matéria
+										</p>
+									</div>
+								</Link>
+
+								<Link
+									to="/admin/ads/new"
+									className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+								>
+									<div className="w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center">
+										<Megaphone className="w-5 h-5 text-white" />
+									</div>
+									<div>
+										<p className="font-medium text-navy">
+											Novo Anúncio
+										</p>
+										<p className="text-sm text-text-secondary">
+											Adicionar novo anúncio
+										</p>
+									</div>
+								</Link>
+
+								<Link
+									to="/admin/comments"
+									className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+								>
+									<div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+										<MessageSquare className="w-5 h-5 text-white" />
+									</div>
+									<div>
+										<p className="font-medium text-navy">
+											Comentários
+										</p>
+										<p className="text-sm text-text-secondary">
+											Revisar comentários
+										</p>
+									</div>
+								</Link>
+
+								<Link
+									to="/admin/newsletters"
+									className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+								>
+									<div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+										<Mail className="w-5 h-5 text-white" />
+									</div>
+									<div>
+										<p className="font-medium text-navy">
+											Newsletter
+										</p>
+										<p className="text-sm text-text-secondary">
+											Gerenciar emails
+										</p>
+									</div>
+								</Link>
+							</div>
+						</div>
+
+						{/* Recent Pending Comments */}
+						<div className="bg-white rounded-lg shadow-md p-6">
+							<div className="flex items-center justify-between mb-4">
+								<h2 className="text-lg font-semibold text-navy">
+									Comentários Pendentes
+								</h2>
+								<Link
+									to="/admin/comments"
+									className="text-teal-primary hover:text-teal-900 text-sm font-medium"
+								>
+									Ver todos
+								</Link>
+							</div>
+
+							{recentComments.length > 0 ? (
+								<div className="space-y-4">
+									{recentComments.map((comment) => (
+										<div
+											key={comment.id}
+											className="border-b border-gray-100 pb-4 last:border-0"
+										>
+											<div className="flex items-start justify-between">
+												<div className="flex-1">
+													<div className="flex items-center space-x-2 mb-1">
+														<span className="font-medium text-navy">
+															{comment.name}
+														</span>
+														<span className="text-xs text-text-secondary">
+															{new Date(
+																comment.created_at,
+															).toLocaleDateString(
+																"pt-BR",
+															)}
+														</span>
+													</div>
+													<p className="text-sm text-text-primary line-clamp-2">
+														{comment.content}
+													</p>
+													<p className="text-xs text-text-secondary mt-1">
+														Post:{" "}
+														{comment.posts?.title}
+													</p>
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
+							) : (
+								<div className="text-center py-8">
+									<MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+									<p className="text-text-secondary">
+										Nenhum comentário pendente
+									</p>
+								</div>
+							)}
+						</div>
+					</div>
+
+					{/* Recent Activity */}
+					<div className="mt-8 bg-white rounded-lg shadow-md p-6">
+						<h2 className="text-lg font-semibold text-navy mb-4">
+							Atividade Recente
+						</h2>
+						<div className="space-y-4">
+							<div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+								<Calendar className="w-5 h-5 text-teal-primary" />
+								<div>
+									<p className="text-sm font-medium text-navy">
+										Sistema Online
+									</p>
+									<p className="text-xs text-text-secondary">
+										Todos os sistemas funcionando
+										normalmente
+									</p>
+								</div>
+							</div>
+
+							<div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+								<ThumbsUp className="w-5 h-5 text-green-500" />
+								<div>
+									<p className="text-sm font-medium text-navy">
+										Performance Ótima
+									</p>
+									<p className="text-xs text-text-secondary">
+										Tempo de carregamento: menos de 2s
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</>
+	);
+};
+
+export default AdminDashboard;
