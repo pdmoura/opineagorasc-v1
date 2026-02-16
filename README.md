@@ -8,11 +8,12 @@ Portal de notícias de Santa Catarina construído com React, Vite, Tailwind CSS 
 - **Routing**: React Router v6
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
-- **State Management**: React Context API + Zustand
-- **Forms**: React Hook Form
+- **State Management**: React Hooks
 - **Database**: Supabase (PostgreSQL)
 - **Storage**: Cloudinary
 - **Authentication**: Supabase Auth
+- **Notifications**: React Hot Toast
+- **SEO**: React Helmet Async
 - **Deployment**: Vercel
 
 ## 📋 Funcionalidades
@@ -29,9 +30,11 @@ Portal de notícias de Santa Catarina construído com React, Vite, Tailwind CSS 
 ### 💬 Sistema de Comentários
 
 - **Moderação**: Painel administrativo para aprovação
-- **Rate Limiting**: 10 comentários por IP a cada 24 horas
+- **Rate Limiting**: 5 minutos entre comentários por email
 - **Validação**: Client-side e server-side
 - **Notificações**: Toast notifications para feedback
+- **Honeypot Protection**: Proteção contra bots
+- **Duplicate Prevention**: Sistema anti-spam robusto
 
 ### 🎛️ Painel Administrativo
 
@@ -94,26 +97,15 @@ VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset
 
 ### 4. Configure o banco de dados
 
-Execute as migrações SQL no seu Supabase na ordem correta:
+Execute as migrações SQL no seu Supabase **EM ORDEM**:
 
-1. **Adicionar coluna slug**:
+1. **Setup do Banco de Dados**:
+    - Execute o conteúdo do arquivo: `sql-migrations/01_DATABASE_SETUP.sql`
 
-```sql
--- Execute o conteúdo do arquivo: sql-migrations/add_slug_column.sql
-```
+2. **Configuração de Segurança**:
+    - Execute o conteúdo do arquivo: `sql-migrations/02_SECURITY_SETUP.sql`
 
-2. **Adicionar colunas de status**:
-
-```sql
--- Execute o conteúdo do arquivo: sql-migrations/add_comment_status.sql
--- Execute o conteúdo do arquivo: sql-migrations/add_ads_columns.sql
-```
-
-3. **Configurar RLS Policies**:
-
-```sql
--- Execute o conteúdo do arquivo: sql-migrations/rls_policies.sql
-```
+> ⚠️ **Importante**: Execute os arquivos SQL exatamente nesta ordem para evitar erros.
 
 ### 5. Execute o projeto
 
@@ -194,8 +186,10 @@ O projeto pode ser deployado em qualquer plataforma que suporte React/Vite:
 - **RLS (Row Level Security)**: Políticas de acesso no Supabase
 - **Rate Limiting**: Proteção contra spam de comentários
 - **Input Validation**: Validação client-side e server-side
+- **Honeypot Protection**: Campo oculto para detectar bots
 - **XSS Protection**: Sanitização de inputs
 - **HTTPS**: Forçado em produção
+- **Safe Functions**: Funções SQL seguras para inserção de dados
 
 ## � Performance
 
@@ -204,6 +198,21 @@ O projeto pode ser deployado em qualquer plataforma que suporte React/Vite:
 - **Debouncing**: Inputs de busca e filtros
 - **Caching**: Estratégias de cache do browser
 - **Minification**: Build otimizado para produção
+
+## 🔧 Debugging e Troubleshooting
+
+### Problemas Comuns
+
+1. **Toast duplicados**: Resolvido com ref-based tracking
+2. **Comentários não aparecem**: Verifique políticas RLS no Supabase
+3. **Build falha**: Verifique variáveis de ambiente
+4. **Imagens não carregam**: Confirme configuração Cloudinary
+
+### Logs e Monitoramento
+
+- React DevTools para debugging de componentes
+- Supabase Dashboard para monitoramento do banco
+- Browser DevTools para debugging de rede
 
 ## 🤝 Contribuição
 
@@ -223,6 +232,42 @@ Para dúvidas ou suporte:
 
 - Email: contato@opineagora.com.br
 - Issues no GitHub
+
+## ✅ Status do Projeto
+
+**Status**: ✅ **Migração Concluída e Produção Pronta!**
+
+### Migração Realizada:
+
+- ✅ **Frontend**: EJS → React 18+ com JSX
+- ✅ **Build Tool**: Vite substituindo sistema manual
+- ✅ **Estilos**: CSS puro → Tailwind CSS
+- ✅ **Icons**: Emojis → Lucide React
+- ✅ **Routing**: Express routes → React Router v6
+- ✅ **State Management**: Variáveis globais → React Hooks
+- ✅ **Forms**: Formulários HTML → Componentes React controlados
+- ✅ **API Client**: Fetch direto → Cliente Supabase otimizado
+- ✅ **Auth**: Session-based → Supabase Auth
+- ✅ **Notifications**: Alertas → React Hot Toast
+- ✅ **SEO**: Meta tags manuais → React Helmet Async
+
+### Melhorias Implementadas:
+
+- 🚀 **Performance**: Build otimizado com Vite
+- 🎨 **UI/UX**: Design moderno com Tailwind CSS
+- 🔒 **Segurança**: RLS policies e validação aprimorada
+- 📱 **Responsividade**: Mobile-first approach
+- ♿ **Acessibilidade**: Semântica HTML e ARIA labels
+- 🔧 **Developer Experience**: Hot reload, TypeScript ready
+- 📦 **Bundle Size**: Code splitting e lazy loading
+- 🛡️ **Anti-Spam**: Sistema robusto de proteção contra bots
+
+### Banco de Dados:
+
+- 🗄️ **2 arquivos SQL** apenas para setup completo
+- 🔐 **Segurança completa** com RLS policies
+- ⚡ **Performance otimizada** com índices
+- 🛡️ **Rate limiting** integrado para comentários
 
 ---
 
