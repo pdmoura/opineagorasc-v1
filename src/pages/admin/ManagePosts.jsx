@@ -40,6 +40,7 @@ const ManagePosts = () => {
 		isBulk: false,
 	});
 	const [selectedPosts, setSelectedPosts] = useState(new Set());
+	const [error, setError] = useState(null);
 
 	// Function to render content blocks
 	const renderContentBlocks = (content) => {
@@ -236,7 +237,19 @@ const ManagePosts = () => {
 		try {
 			setLoading(true);
 
-			let query = supabase.from("posts").select("*", { count: "exact" });
+			// Otimização Extrema: Remover campos não essenciais e contagem exata
+			let query = supabase.from("posts").select(
+				`
+				id,
+				title,
+				excerpt,
+				category,
+				author,
+				created_at,
+				status
+				`,
+				// Removido { count: "exact" } temporariamente para evitar overhead
+			);
 
 			// Apply sorting based on sortBy state
 			switch (sortBy) {
@@ -281,6 +294,7 @@ const ManagePosts = () => {
 			setTotalPages(Math.ceil((count || 0) / postsPerPage));
 		} catch (error) {
 			console.error("Error fetching posts:", error);
+			setError(error.message || "Erro desconhecido");
 			toast.error("Erro ao carregar matérias");
 		} finally {
 			setLoading(false);
@@ -693,11 +707,41 @@ const ManagePosts = () => {
 
 															{/* Preview */}
 															<button
-																onClick={() =>
-																	setPreviewPost(
-																		post,
-																	)
-																}
+																onClick={async () => {
+																	try {
+																		const {
+																			data,
+																			error,
+																		} =
+																			await supabase
+																				.from(
+																					"posts",
+																				)
+																				.select(
+																					"*",
+																				)
+																				.eq(
+																					"id",
+																					post.id,
+																				)
+																				.single();
+																		if (
+																			data
+																		) {
+																			setPreviewPost(
+																				data,
+																			);
+																		}
+																	} catch (e) {
+																		console.error(
+																			"Error fetching preview:",
+																			e,
+																		);
+																		toast.error(
+																			"Erro ao carregar prévia",
+																		);
+																	}
+																}}
 																className="p-2 rounded hover:bg-gray-100 transition-colors"
 																title="Visualizar"
 															>

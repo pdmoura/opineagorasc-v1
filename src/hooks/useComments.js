@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import toast from "react-hot-toast";
+import { secureValidateComment, checkRateLimit } from "../lib/security";
 
 export const useComments = (postId, status = "approved") => {
 	const [comments, setComments] = useState([]);
@@ -47,8 +48,6 @@ export const useSubmitComment = () => {
 	const submissionInProgress = useRef(false);
 
 	const submitComment = async (commentData) => {
-		const { post_id, name, email, content } = commentData;
-
 		// Prevenir envios duplicados
 		if (submissionInProgress.current) {
 			console.warn(
@@ -57,44 +56,22 @@ export const useSubmitComment = () => {
 			return false;
 		}
 
-		// Validation
-		if (!post_id || !name || !email || !content) {
-			toast.error("Todos os campos são obrigatórios.");
-			return false;
-		}
-
 		try {
 			submissionInProgress.current = true;
 			setSubmitting(true);
 
-			// Validação básica
-			if (!name?.trim() || !email?.trim() || !content?.trim()) {
-				throw new Error("Todos os campos são obrigatórios");
-			}
+			// Security validation with rate limiting and sanitization
+			const validatedData = secureValidateComment(commentData);
 
-			if (name.trim().length < 2) {
-				throw new Error("Nome deve ter pelo menos 2 caracteres");
-			}
-
-			if (content.trim().length < 10) {
-				throw new Error("Comentário deve ter pelo menos 10 caracteres");
-			}
-
-			// Validação de email simples
-			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-			if (!emailRegex.test(email.trim())) {
-				throw new Error("Email inválido");
-			}
-
-			// Inserir comentário (RLS permite inserção anônima com status pending)
+			// Insert comment with RLS (status will be 'pending' by default due to RLS)
 			const { data: comment, error: insertError } = await supabase
 				.from("comments")
 				.insert({
-					post_id,
-					name: name.trim(),
-					email: email.trim().toLowerCase(),
-					content: content.trim(),
-					status: "pending",
+					post_id: validatedData.post_id,
+					name: validatedData.name,
+					email: validatedData.email,
+					content: validatedData.content,
+					// IP will be added automatically by RLS policy
 				})
 				.select()
 				.single();
@@ -102,7 +79,7 @@ export const useSubmitComment = () => {
 			if (insertError) {
 				console.error("Supabase error:", insertError);
 
-				// Se for erro de permissão, mostrar mensagem específica sem sucesso
+				// Handle specific security errors
 				if (
 					insertError.code === "42501" ||
 					insertError.message.includes("row-level security")
@@ -112,7 +89,7 @@ export const useSubmitComment = () => {
 					);
 				}
 
-				// Se for erro de constraint (rate limiting por e-mail)
+				// Handle rate limiting errors
 				if (
 					insertError.code === "23505" ||
 					insertError.message.includes("duplicate key") ||
@@ -126,27 +103,14 @@ export const useSubmitComment = () => {
 				throw insertError;
 			}
 
-			// Só mostra sucesso se realmente inseriu no banco
+			// Success - but don't show success message for pending comments
 			toast.success("Comentário enviado para análise!");
 			return comment;
 		} catch (error) {
 			console.error("Error submitting comment:", error);
 
-			// Mensagens amigáveis para diferentes tipos de erro
-			let errorMessage = "Erro ao salvar comentário. Tente novamente.";
-
-			if (error.message.includes("permissões")) {
-				errorMessage = error.message;
-			} else if (error.message.includes("inválido")) {
-				errorMessage = error.message;
-			} else if (
-				error.message.includes("já comentou") ||
-				error.message.includes("recentemente")
-			) {
-				errorMessage = error.message;
-			}
-
-			toast.error(errorMessage);
+			// Show the error message from security validation
+			toast.error(error.message);
 			return false;
 		} finally {
 			setSubmitting(false);

@@ -8,7 +8,7 @@ Portal de notícias de Santa Catarina construído com React, Vite, Tailwind CSS 
 - **Routing**: React Router v6
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
-- **State Management**: React Hooks
+- **State Management**: React Hooks & Zustand
 - **Database**: Supabase (PostgreSQL)
 - **Storage**: Cloudinary
 - **Authentication**: Supabase Auth
@@ -22,11 +22,11 @@ Portal de notícias de Santa Catarina construído com React, Vite, Tailwind CSS 
 
 - **Homepage**: Destaques, últimas notícias, colunas de opinião
 - **Categorias**: Política, Economia, Sociedade, Esportes, Cultura
-- **Matérias**: Leitura completa com sistema de comentários
+- **Matérias**: Leitura completa com sistema de comentários e visualização de blocos dinâmicos
 - **Compartilhamento**: WhatsApp, Facebook, Twitter, Telegram
 - **Design Responsivo**: Mobile-first approach
 - **SEO Otimizado**: Meta tags, Open Graph, JSON-LD
-- **Contador de Visualizações**: Sistema de tracking em tempo real
+- **Contador de Visualizações**: Sistema de tracking em tempo real (RPC)
 
 ### 💬 Sistema de Comentários
 
@@ -55,18 +55,11 @@ Portal de notícias de Santa Catarina construído com React, Vite, Tailwind CSS 
     - Vídeo YouTube
     - Botões (CTA)
     - Anúncios (AdSense)
-- **Drag & Drop**: Reorganização de blocos
+- **Drag & Drop**: Reorganização de blocos com @dnd-kit
 - **Preview**: Visualização em tempo real
 - **Auto-save**: Salvamento automático
 
-### �️ Sistema de Visualizações
-
-- **Contagem em Tempo Real**: Visualizações atualizadas instantaneamente
-- **Sessão Única**: Previne múltiplas contagens do mesmo usuário
-- **Analytics Dashboard**: Estatísticas de visualização por post
-- **Performance Otimizada**: Sistema eficiente com cache e índices
-
-## �🛠️ Instalação e Configuração
+## 🛠️ Instalação e Configuração
 
 ### Pré-requisitos
 
@@ -94,7 +87,7 @@ Copie o arquivo `.env.example` para `.env.local`:
 cp .env.example .env.local
 ```
 
-Configure as variáveis:
+Configure as variáveis no arquivo `.env.local`:
 
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
@@ -105,18 +98,13 @@ VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset
 
 ### 4. Configure o banco de dados
 
-Execute as migrações SQL no seu Supabase **EM ORDEM**:
+Execute as migrações SQL no seu Supabase **EM ORDEM** através do SQL Editor:
 
-1. **Setup do Banco de Dados**:
-    - Execute o conteúdo do arquivo: `sql-migrations/01_DATABASE_SETUP.sql`
+1. **Setup do Banco de Dados**: `sql-migrations/01_DATABASE_SETUP.sql`
+2. **Configuração de Segurança**: `sql-migrations/02_SECURITY_SETUP.sql`
+3. **Sistema de Visualizações**: `sql-migrations/24_add_post_view_count.sql`
 
-2. **Configuração de Segurança**:
-    - Execute o conteúdo do arquivo: `sql-migrations/02_SECURITY_SETUP.sql`
-
-3. **Sistema de Visualizações**:
-    - Execute o conteúdo do arquivo: `sql-migrations/24_add_post_view_count.sql`
-
-> ⚠️ **Importante**: Execute os arquivos SQL exatamente nesta ordem para evitar erros.
+> ⚠️ **Importante**: Execute os arquivos SQL exatamente nesta ordem para evitar erros de dependência.
 
 ### 5. Execute o projeto
 
@@ -126,106 +114,29 @@ npm run dev
 
 Abra http://localhost:5173 no seu navegador.
 
-## 📁 Estrutura do Projeto
+## 🚀 Deploy na Vercel
 
-```
-src/
-├── components/
-│   ├── admin/          # Componentes administrativos
-│   ├── public/         # Componentes públicos
-│   └── shared/         # Componentes compartilhados
-├── pages/              # Páginas da aplicação
-│   ├── admin/         # Páginas administrativas
-│   ├── Home.jsx       # Homepage
-│   ├── Post.jsx       # Página da matéria
-│   ├── Category.jsx   # Página de categoria
-│   └── Login.jsx      # Página de login
-├── hooks/             # Hooks customizados
-├── lib/               # Utilitários e configurações
-├── context/           # Context providers
-├── App.jsx            # Componente principal
-├── main.jsx           # Entry point
-└── index.css          # Estilos globais
-```
+Este projeto está configurado para deploy fácil na Vercel.
 
-## 🎨 Personalização
-
-### Cores e Tema
-
-As cores principais estão definidas no `tailwind.config.js`:
-
-- `navy`: #1a365d
-- `teal-primary`: #008080
-- `orange-warm`: #ff6b35
-
-### Componentes
-
-- **PostCard**: Card de matéria com múltiplas variantes
-- **Header**: Navegação responsiva com busca
-- **Footer**: Links sociais e newsletter
-- **CommentForm**: Formulário de comentários
-- **CommentList**: Lista de comentários aprovados
+1.  Faça um fork ou push deste repositório para o GitHub.
+2.  Crie um novo projeto na [Vercel](https://vercel.com/new).
+3.  Importe o seu repositório.
+4.  Configure as **Environment Variables** (copie do seu `.env.local`):
+    - `VITE_SUPABASE_URL`
+    - `VITE_SUPABASE_ANON_KEY`
+    - `VITE_CLOUDINARY_CLOUD_NAME`
+    - `VITE_CLOUDINARY_UPLOAD_PRESET`
+5.  A **Build Command** (`vite build`) e **Output Directory** (`dist`) devem ser detectados automaticamente.
+6.  Clique em **Deploy**.
 
 ## 🔧 Scripts Disponíveis
 
 ```bash
 npm run dev          # Inicia servidor de desenvolvimento
 npm run build        # Build para produção
-npm run preview      # Preview do build
+npm run preview      # Preview do build localmente
 npm run lint         # Linting do código
 ```
-
-## 🚀 Deploy
-
-### Vercel (Recomendado)
-
-1. Conecte seu repositório ao Vercel
-2. Configure as variáveis de ambiente no painel
-3. Deploy automático em cada push para main
-
-### Outras plataformas
-
-O projeto pode ser deployado em qualquer plataforma que suporte React/Vite:
-
-- Netlify
-- Railway
-- DigitalOcean App Platform
-- AWS Amplify
-
-## 🔒 Segurança
-
-- **RLS (Row Level Security)**: Políticas de acesso no Supabase
-- **Rate Limiting**: Proteção contra spam de comentários
-- **Input Validation**: Validação client-side e server-side
-- **Honeypot Protection**: Campo oculto para detectar bots
-- **XSS Protection**: Sanitização de inputs
-- **HTTPS**: Forçado em produção
-- **Safe Functions**: Funções SQL seguras para inserção de dados
-
-## ⚡ Performance
-
-- **Code Splitting**: Lazy loading de componentes
-- **Image Optimization**: Cloudinary transformations
-- **Debouncing**: Inputs de busca e filtros
-- **Caching**: Estratégias de cache do browser
-- **Minification**: Build otimizado para produção
-- **View Tracking**: Sistema eficiente de contagem de visualizações
-
-## 🔧 Debugging e Troubleshooting
-
-### Problemas Comuns
-
-1. **Toast duplicados**: Resolvido com ref-based tracking
-2. **Comentários não aparecem**: Verifique políticas RLS no Supabase
-3. **Build falha**: Verifique variáveis de ambiente
-4. **Imagens não carregam**: Confirme configuração Cloudinary
-5. **Visualizações não contam**: Verifique funções RPC e coluna view_count
-
-### Logs e Monitoramento
-
-- React DevTools para debugging de componentes
-- Supabase Dashboard para monitoramento do banco
-- Browser DevTools para debugging de rede
 
 ## 🤝 Contribuição
 

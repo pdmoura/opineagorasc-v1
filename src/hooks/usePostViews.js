@@ -5,124 +5,125 @@ export const usePostViews = (postId) => {
 	const [viewCount, setViewCount] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
-	const [isIncrementing, setIsIncrementing] = useState(false);
-	const hasFetchedRef = useRef(false);
-	const hasIncrementedRef = useRef(false);
+	const isTrackingRef = useRef(false);
 
-	// Fetch current view count
-	const fetchViewCount = async () => {
-		if (!postId || hasIncrementedRef.current) return;
+	// Fetch initial view count and subscribe to realtime updates
+	useEffect(() => {
+		if (!postId) return;
 
-		try {
-			const { data, error } = await supabase
+		const fetchInitialCount = async () => {
+			try {
+				const { data, error } = await supabase
+					.from("posts")
+					.select("view_count")
+					.eq("id", postId)
+					.single();
+
+				if (error) throw error;
+				setViewCount(data?.view_count || 0);
+			} catch (err) {
+				console.error("Error fetching view count:", err);
+				// Don't set error state for missing columns/tables during dev
+				if (err.code !== "42703") {
+					setError(err.message);
+				}
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchInitialCount();
+
+		// Realtime subscription
+		const channel = supabase
+			.channel(`public:posts:id=eq.${postId}`)
+			.on(
+				"postgres_changes",
+				{
+					event: "UPDATE",
+					schema: "public",
+					table: "posts",
+					filter: `id=eq.${postId}`,
+				},
+				(payload) => {
+					console.log("Realtime update received:", payload);
+					if (payload.new && payload.new.view_count !== undefined) {
+						setViewCount(payload.new.view_count);
+					}
+				},
+			)
+			.subscribe();
+
+		return () => {
+			supabase.removeChannel(channel);
+		};
+	}, [postId]);
+
+	// Track view with session storage unique per post
+	const trackView = async () => {
+		if (!postId || isTrackingRef.current) return;
+
+		const sessionKey = `viewed_post_${postId}`;
+
+		// IMMEDIATE SYNC LOCK: Set session storage BEFORE anything else
+		if (sessionStorage.getItem(sessionKey)) {
+			console.log("Post already viewed (session storage).");
+			// Still try to fetch latest count to ensure UI is up to date
+			const { data } = await supabase
 				.from("posts")
 				.select("view_count")
 				.eq("id", postId)
 				.single();
-
-			if (error) {
-				// Handle case where view_count column doesn't exist yet
-				if (error.code === "42703") {
-					// column does not exist
-					setViewCount(0);
-					return;
-				}
-				throw error;
-			}
-			setViewCount(data?.view_count || 0);
-		} catch (err) {
-			console.error("Error fetching view count:", err);
-			// Don't set error state for migration-related issues
-			if (err.code !== "42703") {
-				setError(err.message);
-			}
-			setViewCount(0);
-		} finally {
-			setLoading(false);
+			if (data?.view_count) setViewCount(data.view_count);
+			return;
 		}
-	};
 
-	// Increment view count
-	const incrementView = async () => {
-		if (!postId || isIncrementing) return;
-
-		setIsIncrementing(true);
+		sessionStorage.setItem(sessionKey, "true");
+		isTrackingRef.current = true;
 
 		try {
-			// Try RPC function first
-			const { error } = await supabase.rpc("increment_post_view_text", {
-				post_id: postId.toString(),
+			// Generate a unique request ID for idempotency pattern
+			const requestId = crypto.randomUUID();
+
+			console.log(`Incrementing view count for post ${postId}`);
+
+			// Optimistically update local state
+			setViewCount((prev) => prev + 1);
+
+			// Use the idempotent function
+			const { error } = await supabase.rpc("increment_view_count", {
+				p_id: String(postId),
+				p_request_id: requestId,
 			});
 
 			if (error) {
-				// If RPC fails, try direct SQL update
-				const { error: updateError } = await supabase
-					.from("posts")
-					.update({ view_count: (viewCount || 0) + 1 })
-					.eq("id", postId);
-
-				if (updateError) {
-					console.error("Direct SQL update failed:", updateError);
-				} else {
-					// Update local state on success
-					setViewCount((prev) => prev + 1);
-				}
+				console.error("RPC Error:", error);
+				// Revert optimistic update
+				setViewCount((prev) => Math.max(0, prev - 1));
+				// Revert session lock
+				sessionStorage.removeItem(sessionKey);
 			} else {
-				// Update local state on success
-				setViewCount((prev) => {
-					return prev + 1;
-				});
-				hasIncrementedRef.current = true;
+				// Success - fetch authoritative count to sync
+				const { data } = await supabase
+					.from("posts")
+					.select("view_count")
+					.eq("id", postId)
+					.single();
+				if (data?.view_count) setViewCount(data.view_count);
 			}
 		} catch (err) {
-			console.error("Error incrementing view count:", err);
-			// Don't set error state for migration-related issues
-			if (err.code !== "42883") {
-				setError(err.message);
-			}
+			console.error("Error tracking view:", err);
+			setViewCount((prev) => Math.max(0, prev - 1));
+			sessionStorage.removeItem(sessionKey);
 		} finally {
-			setIsIncrementing(false);
+			isTrackingRef.current = false;
 		}
 	};
-
-	// Track view with session storage to avoid counting multiple views from same session
-	const trackView = async () => {
-		if (!postId) return;
-
-		const sessionKey = `post_view_${postId}`;
-		const hasViewed = sessionStorage.getItem(sessionKey);
-
-		// Temporary: bypass session storage for testing
-		const bypassSession = sessionStorage.getItem("bypass_session");
-
-		if (!hasViewed || bypassSession) {
-			await incrementView();
-			sessionStorage.setItem(sessionKey, "true");
-			// Set session storage to expire after 30 minutes
-			setTimeout(
-				() => {
-					sessionStorage.removeItem(sessionKey);
-				},
-				30 * 60 * 1000,
-			);
-		} else {
-			// Post already viewed in this session
-			return;
-		}
-	};
-
-	useEffect(() => {
-		if (!postId || isIncrementing || hasFetchedRef.current) return;
-
-		hasFetchedRef.current = true;
-		fetchViewCount();
-	}, [postId, isIncrementing]);
 
 	return {
 		viewCount,
 		loading,
 		error,
-		incrementView,
 		trackView,
 	};
 };
@@ -136,6 +137,7 @@ export const usePopularPosts = (limit = 10) => {
 	useEffect(() => {
 		const fetchPopularPosts = async () => {
 			try {
+				// Try RPC first
 				const { data, error } = await supabase.rpc(
 					"get_popular_posts",
 					{
@@ -144,31 +146,27 @@ export const usePopularPosts = (limit = 10) => {
 				);
 
 				if (error) {
-					// Handle case where function doesn't exist yet
-					if (error.code === "42883") {
-						// function does not exist
-						// Fallback to regular posts sorted by date
-						const { data: fallbackData, error: fallbackError } =
-							await supabase
-								.from("posts")
-								.select("*")
-								.eq("status", "published")
-								.order("date", { ascending: false })
-								.limit(limit);
+					// Fallback to standard query if RPC doesn't exist
+					console.log(
+						"Popular posts RPC failed, using standard query:",
+						error.message,
+					);
+					const { data: standardData, error: standardError } =
+						await supabase
+							.from("posts")
+							.select("*")
+							.eq("status", "published")
+							.order("view_count", { ascending: false })
+							.limit(limit);
 
-						if (fallbackError) throw fallbackError;
-						setPosts(fallbackData || []);
-						return;
-					}
-					throw error;
+					if (standardError) throw standardError;
+					setPosts(standardData || []);
+				} else {
+					setPosts(data || []);
 				}
-				setPosts(data || []);
 			} catch (err) {
 				console.error("Error fetching popular posts:", err);
-				// Don't set error state for migration-related issues
-				if (err.code !== "42883") {
-					setError(err.message);
-				}
+				setError(err.message);
 			} finally {
 				setLoading(false);
 			}
@@ -193,25 +191,13 @@ export const useViewStats = () => {
 	useEffect(() => {
 		const fetchViewStats = async () => {
 			try {
-				// Get total views
+				// Get total views from published posts
 				const { data: totalData, error: totalError } = await supabase
 					.from("posts")
 					.select("view_count")
 					.eq("status", "published");
 
-				if (totalError) {
-					// Handle case where view_count column doesn't exist yet
-					if (totalError.code === "42703") {
-						// column does not exist
-						setStats({
-							totalViews: 0,
-							averageViews: 0,
-							mostViewedPost: null,
-						});
-						return;
-					}
-					throw totalError;
-				}
+				if (totalError) throw totalError;
 
 				const totalViews =
 					totalData?.reduce(
@@ -244,15 +230,7 @@ export const useViewStats = () => {
 				});
 			} catch (err) {
 				console.error("Error fetching view stats:", err);
-				// Don't set error state for migration-related issues
-				if (err.code !== "42703") {
-					setError(err.message);
-				}
-				setStats({
-					totalViews: 0,
-					averageViews: 0,
-					mostViewedPost: null,
-				});
+				setError(err.message);
 			} finally {
 				setLoading(false);
 			}

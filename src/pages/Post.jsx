@@ -45,6 +45,25 @@ const Post = () => {
 	const [relatedPosts, setRelatedPosts] = useState([]);
 	const [showComments, setShowComments] = useState(true);
 
+	// Sync comments when loaded
+	useEffect(() => {
+		if (commentsData) {
+			setComments(commentsData);
+		}
+	}, [commentsData]);
+
+	const handleCommentSubmit = async (data) => {
+		const newComment = await submitComment(data);
+		if (newComment) {
+			// If auto-approved (rare but possible), add to list
+			if (newComment.status === "approved") {
+				setComments((prev) => [newComment, ...prev]);
+			}
+			return true;
+		}
+		return false;
+	};
+
 	// Scroll to top when post loads
 	useEffect(() => {
 		if (post && !loading) {
@@ -665,7 +684,7 @@ const Post = () => {
 						<>
 							<CommentForm
 								postId={post.id}
-								onSubmit={submitComment}
+								onSubmit={handleCommentSubmit}
 								submitting={submitting}
 							/>
 							<CommentList

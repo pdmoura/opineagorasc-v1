@@ -8,6 +8,8 @@
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE newsletter_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_view_events ENABLE ROW LEVEL SECURITY;
 
 -- 2. Remove existing policies (if any)
 DO $$
@@ -30,6 +32,12 @@ BEGIN
     DROP POLICY IF EXISTS "Enable update for authenticated users ads" ON ads;
     DROP POLICY IF EXISTS "Enable delete for authenticated users ads" ON ads;
     
+    -- Drop policies for newsletter_subscriptions
+    DROP POLICY IF EXISTS "Authenticated users can delete newsletter subscriptions" ON newsletter_subscriptions;
+    DROP POLICY IF EXISTS "Authenticated users can update newsletter subscriptions" ON newsletter_subscriptions;
+    DROP POLICY IF EXISTS "Authenticated users can view newsletter subscriptions" ON newsletter_subscriptions;
+    DROP POLICY IF EXISTS "Public can insert newsletter subscriptions" ON newsletter_subscriptions;
+
     RAISE NOTICE 'Existing policies removed';
 EXCEPTION
     WHEN others THEN
@@ -98,7 +106,29 @@ CREATE POLICY "Enable delete for authenticated users ads" ON ads
 FOR DELETE TO authenticated
 USING (auth.role() = 'authenticated');
 
--- 6. Grant permissions
+-- 6. Create policies for newsletter_subscriptions table
+-- Authenticated users can delete
+CREATE POLICY "Authenticated users can delete newsletter subscriptions" ON newsletter_subscriptions
+FOR DELETE TO authenticated
+USING (auth.role() = 'authenticated');
+
+-- Authenticated users can update
+CREATE POLICY "Authenticated users can update newsletter subscriptions" ON newsletter_subscriptions
+FOR UPDATE TO authenticated
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
+
+-- Authenticated users can view
+CREATE POLICY "Authenticated users can view newsletter subscriptions" ON newsletter_subscriptions
+FOR SELECT TO authenticated
+USING (auth.role() = 'authenticated');
+
+-- Public can insert
+CREATE POLICY "Public can insert newsletter subscriptions" ON newsletter_subscriptions
+FOR INSERT TO public
+WITH CHECK (true);
+
+-- 7. Grant permissions
 -- Posts permissions
 GRANT SELECT ON posts TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON posts TO authenticated;
@@ -114,7 +144,17 @@ GRANT SELECT ON ads TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ads TO authenticated;
 GRANT ALL ON ads TO service_role;
 
--- 7. Create function for safe comment insertion
+-- Newsletter permissions
+GRANT INSERT ON newsletter_subscriptions TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON newsletter_subscriptions TO authenticated;
+GRANT ALL ON newsletter_subscriptions TO service_role;
+
+-- Post View Events (Idempotency) permissions
+GRANT INSERT ON post_view_events TO anon;
+GRANT ALL ON post_view_events TO service_role;
+GRANT SELECT ON post_view_events TO authenticated;
+
+-- 8. Create function for safe comment insertion
 CREATE OR REPLACE FUNCTION insert_comment_safely(
     p_post_id BIGINT,
     p_name VARCHAR(100),
@@ -145,28 +185,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 8. Grant access to safe function
+-- 9. Grant access to functions (RPC)
 GRANT EXECUTE ON FUNCTION insert_comment_safely TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION increment_view_count(text, uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_popular_posts(integer) TO anon, authenticated;
 
--- 9. Final verification
+-- 10. Final verification
 DO $$
 DECLARE
     posts_rls boolean;
     comments_rls boolean;
     ads_rls boolean;
+    newsletter_rls boolean;
     posts_policies integer;
     comments_policies integer;
     ads_policies integer;
+    newsletter_policies integer;
 BEGIN
     -- Check RLS status
     SELECT rowsecurity INTO posts_rls FROM pg_tables WHERE tablename = 'posts';
     SELECT rowsecurity INTO comments_rls FROM pg_tables WHERE tablename = 'comments';
     SELECT rowsecurity INTO ads_rls FROM pg_tables WHERE tablename = 'ads';
+    SELECT rowsecurity INTO newsletter_rls FROM pg_tables WHERE tablename = 'newsletter_subscriptions';
     
     -- Count policies
     SELECT count(*) INTO posts_policies FROM pg_policies WHERE tablename = 'posts';
     SELECT count(*) INTO comments_policies FROM pg_policies WHERE tablename = 'comments';
     SELECT count(*) INTO ads_policies FROM pg_policies WHERE tablename = 'ads';
+    SELECT count(*) INTO newsletter_policies FROM pg_policies WHERE tablename = 'newsletter_subscriptions';
     
     -- Report results
     RAISE NOTICE '=== SECURITY SETUP COMPLETED ===';
@@ -174,17 +220,20 @@ BEGIN
     RAISE NOTICE '  Posts: % (%) policies', posts_rls, posts_policies;
     RAISE NOTICE '  Comments: % (%) policies', comments_rls, comments_policies;
     RAISE NOTICE '  Ads: % (%) policies', ads_rls, ads_policies;
+    RAISE NOTICE '  Newsletter: % (%) policies', newsletter_rls, newsletter_policies;
     RAISE NOTICE '';
     RAISE NOTICE 'Features enabled:';
     RAISE NOTICE '  ✓ Row Level Security on all tables';
-    RAISE NOTICE '  ✓ Rate limiting via unique constraint (email, post_id, created_at)';
+    RAISE NOTICE '  ✓ Rate limiting via unique constraint';
     RAISE NOTICE '  ✓ Anonymous comment submission';
+    RAISE NOTICE '  ✓ Newsletter public subscription';
     RAISE NOTICE '  ✓ Authenticated user management';
-    RAISE NOTICE '  ✓ Safe comment insertion function';
+    RAISE NOTICE '  ✓ Safe comment insertion';
+    RAISE NOTICE '  ✓ Post view counting (Idempotent)';
     RAISE NOTICE '';
     RAISE NOTICE 'Your application is now secure and ready!';
     RAISE NOTICE '=================================';
 END $$;
 
--- 10. Refresh schema for Supabase APIs
+-- 11. Refresh schema for Supabase APIs
 NOTIFY pgrst, 'reload schema';

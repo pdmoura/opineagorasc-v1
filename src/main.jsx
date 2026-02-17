@@ -14,11 +14,9 @@ const routerConfig = {
 };
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-	<React.StrictMode>
-		<HelmetProvider>
-			<BrowserRouter {...routerConfig}>
-				<App />
-			</BrowserRouter>
-		</HelmetProvider>
-	</React.StrictMode>,
+	<HelmetProvider>
+		<BrowserRouter {...routerConfig}>
+			<App />
+		</BrowserRouter>
+	</HelmetProvider>,
 );

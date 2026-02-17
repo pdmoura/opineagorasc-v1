@@ -33,6 +33,12 @@
 		@apply box-border;
 	}
 
+	html,
+	body,
+	#root {
+		@apply h-full;
+	}
+
 	/* Remover linhas indesejadas do footer */
 	footer {
 		background-image: none !important;

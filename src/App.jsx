@@ -22,6 +22,7 @@ import TodasCategorias from "./pages/TodasCategorias";
 import Search from "./pages/Search";
 import PoliticaTermos from "./pages/PoliticaTermos";
 import Login from "./pages/Login";
+import AllAds from "./pages/AllAds";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManagePosts from "./pages/admin/ManagePosts";
 import ManageAds from "./pages/admin/ManageAds";
@@ -119,7 +120,10 @@ function App() {
 					property="og:description"
 					content="Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência."
 				/>
-				<meta property="og:url" content="https://opineagorasc.vercel.app" />
+				<meta
+					property="og:url"
+					content="https://opineagorasc.vercel.app"
+				/>
 				<meta property="og:site_name" content="Opine Agora SC" />
 				<meta
 					property="og:image"
@@ -297,6 +301,10 @@ function App() {
 									<Route
 										path="/termos-uso"
 										element={<PoliticaTermos />}
+									/>
+									<Route
+										path="/anuncios"
+										element={<AllAds />}
 									/>
 									{/* Fallback */}
 									<Route path="*" element={<Home />} />

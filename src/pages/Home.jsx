@@ -13,6 +13,13 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
+// Swiper
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
+
 // Componente SVG personalizado do WhatsApp
 const WhatsAppIcon = ({ className }) => (
 	<svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -33,6 +40,7 @@ const Home = () => {
 	const [newsletterEmail, setNewsletterEmail] = useState("");
 	const [submitting, setSubmitting] = useState(false);
 	const [ads, setAds] = useState([]);
+	const [bannerAds, setBannerAds] = useState([]);
 	const [adsLoading, setAdsLoading] = useState(true);
 	const { addNewsletter } = useNewsletters();
 	const {
@@ -55,15 +63,28 @@ const Home = () => {
 	useEffect(() => {
 		const fetchAds = async () => {
 			try {
-				const { data, error } = await supabase
+				// Fetch Home/Footer Ads
+				const { data: footerData, error: footerError } = await supabase
 					.from("ads")
 					.select("*")
 					.eq("status", "approved")
+					.eq("category", "footer")
 					.order("created_at", { ascending: false })
 					.limit(6);
 
-				if (error) throw error;
-				setAds(data || []);
+				if (footerError) throw footerError;
+				setAds(footerData || []);
+
+				// Fetch Top Banner Ads
+				const { data: bannerData, error: bannerError } = await supabase
+					.from("ads")
+					.select("*")
+					.eq("status", "approved")
+					.eq("category", "banner")
+					.order("created_at", { ascending: false });
+
+				if (bannerError) throw bannerError;
+				setBannerAds(bannerData || []);
 			} catch (error) {
 				console.error("Error fetching ads:", error);
 			} finally {
@@ -220,6 +241,53 @@ const Home = () => {
 					})}
 				</script>
 			</Helmet>
+
+			{/* Top Banner Ad Section */}
+			{bannerAds.length > 0 && (
+				<div className="bg-gray-100 border-b border-gray-200">
+					<div className="max-w-7xl mx-auto">
+						<Swiper
+							modules={[Autoplay]}
+							spaceBetween={0}
+							slidesPerView={1}
+							loop={bannerAds.length > 1}
+							allowTouchMove={false} // Disable user swiping as requested "without buttons for user to move"
+							autoplay={{
+								delay: 5000,
+								disableOnInteraction: false,
+							}}
+							className="w-full"
+						>
+							{bannerAds.map((ad) => (
+								<SwiperSlide key={ad.id}>
+									<div className="w-full flex justify-center">
+										{ad.link_url ? (
+											<a
+												href={ad.link_url}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="block w-full"
+											>
+												<img
+													src={ad.image_url}
+													alt={ad.title}
+													className="w-full h-auto max-h-[150px] object-cover md:object-contain"
+												/>
+											</a>
+										) : (
+											<img
+												src={ad.image_url}
+												alt={ad.title}
+												className="w-full h-auto max-h-[150px] object-cover md:object-contain"
+											/>
+										)}
+									</div>
+								</SwiperSlide>
+							))}
+						</Swiper>
+					</div>
+				</div>
+			)}
 
 			{/* Hero Section */}
 			<section className="bg-gradient-to-br from-navy to-teal-primary text-white py-20">
@@ -423,7 +491,7 @@ const Home = () => {
 									Oeste Catarinense na palma da sua mão.
 								</p>
 								<a
-									href="https://wa.me/554899999999"
+									href="https://chat.whatsapp.com/FPhqmB9FoW4HH67zJnVWD2"
 									target="_blank"
 									rel="noopener noreferrer"
 									className="inline-flex items-center justify-center w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
@@ -456,7 +524,7 @@ const Home = () => {
 							</span>
 						</h2>
 						<Link
-							to="/admin/ads"
+							to="/anuncios"
 							className="text-teal-primary hover:text-teal-900 flex items-center space-x-1 text-sm font-medium"
 						>
 							<span>Ver todos</span>
@@ -464,55 +532,74 @@ const Home = () => {
 						</Link>
 					</div>
 
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<Swiper
+						modules={[Autoplay, Pagination, Navigation]}
+						spaceBetween={24}
+						slidesPerView={1}
+						navigation
+						pagination={{ clickable: true }}
+						autoplay={{
+							delay: 5000,
+							disableOnInteraction: false,
+						}}
+						loop={true}
+						breakpoints={{
+							640: {
+								slidesPerView: 2,
+							},
+							1024: {
+								slidesPerView: 3,
+							},
+						}}
+						className="pb-12" // Padding bottom for pagination bullets
+					>
 						{ads.map((ad) => (
-							<div
-								key={ad.id}
-								className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-							>
-								{/* Ad Image */}
-								{ad.image_url ? (
-									<a
-										href={ad.link_url}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="aspect-video bg-gray-100 block"
-									>
-										<img
-											src={ad.image_url}
-											alt={ad.title}
-											className="w-full h-full object-cover"
-										/>
-									</a>
-								) : (
-									<div className="aspect-video bg-gray-100 flex items-center justify-center">
-										<Megaphone className="w-12 h-12 text-gray-400" />
-									</div>
-								)}
-
-								{/* Ad Content */}
-								<div className="p-4">
-									{ad.link_url ? (
+							<SwiperSlide key={ad.id} className="h-auto">
+								<div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
+									{/* Ad Image */}
+									{ad.image_url ? (
 										<a
 											href={ad.link_url}
 											target="_blank"
 											rel="noopener noreferrer"
-											className="font-semibold text-navy mb-2 line-clamp-2 block hover:text-teal-primary transition-colors"
+											className="aspect-video bg-gray-100 block relative overflow-hidden group"
 										>
-											{ad.title}
+											<img
+												src={ad.image_url}
+												alt={ad.title}
+												className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+											/>
 										</a>
 									) : (
-										<h3 className="font-semibold text-navy mb-2 line-clamp-2">
-											{ad.title}
-										</h3>
+										<div className="aspect-video bg-gray-100 flex items-center justify-center">
+											<Megaphone className="w-12 h-12 text-gray-400" />
+										</div>
 									)}
-									<p className="text-sm text-text-secondary line-clamp-3 mb-3">
-										{ad.content}
-									</p>
+
+									{/* Ad Content */}
+									<div className="p-4 flex-1 flex flex-col">
+										{ad.link_url ? (
+											<a
+												href={ad.link_url}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="font-semibold text-navy mb-2 line-clamp-2 block hover:text-teal-primary transition-colors"
+											>
+												{ad.title}
+											</a>
+										) : (
+											<h3 className="font-semibold text-navy mb-2 line-clamp-2">
+												{ad.title}
+											</h3>
+										)}
+										<p className="text-sm text-text-secondary line-clamp-3 mb-3 flex-1">
+											{ad.content}
+										</p>
+									</div>
 								</div>
-							</div>
+							</SwiperSlide>
 						))}
-					</div>
+					</Swiper>
 
 					{ads.length === 0 && !adsLoading && (
 						<div className="text-center py-12">

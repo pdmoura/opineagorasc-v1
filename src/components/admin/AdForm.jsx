@@ -17,6 +17,9 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+// Components
+import ImageUploadDirect from "./ImageUploadDirect";
+
 // Hooks
 import { supabase } from "../../lib/supabase";
 import toast from "react-hot-toast";
@@ -43,7 +46,6 @@ const AdForm = () => {
 
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
-	const [imagePreview, setImagePreview] = useState("");
 
 	useEffect(() => {
 		if (isEditing) {
@@ -99,7 +101,6 @@ const AdForm = () => {
 								"yyyy-MM-dd",
 							),
 				});
-				setImagePreview(data.image_url || "");
 			}
 		} catch (error) {
 			console.error("Error fetching ad:", error);
@@ -134,63 +135,10 @@ const AdForm = () => {
 			}));
 		}
 
-		// Update image preview
-		if (name === "image_url") {
-			setImagePreview(value);
-		}
-
 		// Debug para datas
 		if (name === "start_date" || name === "end_date") {
 			console.log(`📅 ${name} changed to:`, value);
 		}
-	};
-
-	const handleImageUpload = async (e) => {
-		const file = e.target.files[0];
-		if (!file) return;
-
-		// Validate file type
-		if (!file.type.startsWith("image/")) {
-			toast.error("Por favor, selecione uma imagem válida");
-			return;
-		}
-
-		// Validate file size (5MB max)
-		if (file.size > 5 * 1024 * 1024) {
-			toast.error("A imagem deve ter no máximo 5MB");
-			return;
-		}
-
-		try {
-			setLoading(true);
-
-			// Create a simple preview (in production, you'd upload to a service like Cloudinary)
-			const reader = new FileReader();
-			reader.onloadend = () => {
-				const preview = reader.result;
-				setImagePreview(preview);
-				setFormData((prev) => ({
-					...prev,
-					image_url: preview,
-				}));
-			};
-			reader.readAsDataURL(file);
-
-			toast.success("Imagem carregada com sucesso!");
-		} catch (error) {
-			console.error("Error uploading image:", error);
-			toast.error("Erro ao carregar imagem");
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const removeImage = () => {
-		setImagePreview("");
-		setFormData((prev) => ({
-			...prev,
-			image_url: "",
-		}));
 	};
 
 	const validateForm = () => {
@@ -199,7 +147,7 @@ const AdForm = () => {
 			return false;
 		}
 
-		if (!formData.content.trim()) {
+		if (formData.category !== "banner" && !formData.content.trim()) {
 			toast.error("O conteúdo é obrigatório");
 			return false;
 		}
@@ -227,6 +175,8 @@ const AdForm = () => {
 				...formData,
 				status: publish ? "approved" : "draft",
 				updated_at: new Date().toISOString(),
+				// Always update created_at to now when saving/publishing to move to top
+				created_at: new Date().toISOString(),
 			};
 
 			let result;
@@ -326,7 +276,9 @@ const AdForm = () => {
 									{/* Title */}
 									<div className="md:col-span-2">
 										<label className="block text-sm font-medium text-gray-700 mb-2">
-											Título do Anúncio *
+											{formData.category === "banner"
+												? "Texto Alternativo (Alt)"
+												: "Título do Anúncio *"}
 										</label>
 										<input
 											type="text"
@@ -334,13 +286,17 @@ const AdForm = () => {
 											value={formData.title}
 											onChange={handleInputChange}
 											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
-											placeholder="Título do anúncio"
+											placeholder={
+												formData.category === "banner"
+													? "Descreva a imagem para acessibilidade"
+													: "Título do anúncio"
+											}
 											required
 										/>
 									</div>
 
 									{/* Category */}
-									<div>
+									<div className="md:col-span-2">
 										<label className="block text-sm font-medium text-gray-700 mb-2">
 											Categoria
 										</label>
@@ -362,43 +318,24 @@ const AdForm = () => {
 									</div>
 
 									{/* Status */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-2">
-											Status
-										</label>
-										<select
-											name="status"
-											value={formData.status}
-											onChange={handleInputChange}
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
-										>
-											<option value="draft">
-												Rascunho
-											</option>
-											<option value="approved">
-												Aprovado
-											</option>
-											<option value="archived">
-												Arquivado
-											</option>
-										</select>
-									</div>
 
-									{/* Content */}
-									<div className="md:col-span-2">
-										<label className="block text-sm font-medium text-gray-700 mb-2">
-											Conteúdo *
-										</label>
-										<textarea
-											name="content"
-											value={formData.content}
-											onChange={handleInputChange}
-											rows={4}
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
-											placeholder="Conteúdo do anúncio"
-											required
-										/>
-									</div>
+									{/* Content - Hidden for Banner */}
+									{formData.category !== "banner" && (
+										<div className="md:col-span-2">
+											<label className="block text-sm font-medium text-gray-700 mb-2">
+												Conteúdo *
+											</label>
+											<textarea
+												name="content"
+												value={formData.content}
+												onChange={handleInputChange}
+												rows={4}
+												className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+												placeholder="Conteúdo do anúncio"
+												required
+											/>
+										</div>
+									)}
 								</div>
 							</div>
 
@@ -423,59 +360,17 @@ const AdForm = () => {
 									Imagem do Anúncio
 								</h2>
 
-								<div className="space-y-4">
-									{/* Image Upload */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-2">
-											Upload de Imagem
-										</label>
-										<div className="flex items-center space-x-4">
-											<label className="flex items-center justify-center w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-												<Upload className="w-4 h-4 mr-2" />
-												<span>Selecionar Imagem</span>
-												<input
-													type="file"
-													accept="image/*"
-													onChange={handleImageUpload}
-													className="hidden"
-												/>
-											</label>
-										</div>
-									</div>
-
-									{/* Image URL */}
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-2">
-											Ou URL da Imagem
-										</label>
-										<input
-											type="url"
-											name="image_url"
-											value={formData.image_url}
-											onChange={handleInputChange}
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
-											placeholder="https://exemplo.com/imagem.jpg"
-										/>
-									</div>
-
-									{/* Image Preview */}
-									{imagePreview && (
-										<div className="relative">
-											<img
-												src={imagePreview}
-												alt="Preview"
-												className="w-full max-w-md rounded-lg shadow-md"
-											/>
-											<button
-												onClick={removeImage}
-												className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-												title="Remover imagem"
-											>
-												<X className="w-4 h-4" />
-											</button>
-										</div>
-									)}
-								</div>
+								<ImageUploadDirect
+									value={formData.image_url}
+									onChange={(url) =>
+										setFormData((prev) => ({
+											...prev,
+											image_url: url,
+										}))
+									}
+									placeholder="Clique para fazer upload do banner/imagem"
+									aspectRatio="free"
+								/>
 							</div>
 
 							{/* Dates */}
