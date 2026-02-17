@@ -22,20 +22,12 @@ const supabase = createClient(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configure EJS
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+// Configure EJS - REMOVIDO para deploy React
+// app.set("view engine", "ejs");
+// app.set("views", path.join(__dirname, "views"));
 
-// Serve static files - ВАЖНО: порядок имеет значение!
-// 1. Сначала dist (compiled assets)
-app.use("/dist", express.static(path.join(__dirname, "public/dist")));
-// 2. Потом остальные static files (CSS, images, etc)
-app.use(
-	express.static(path.join(__dirname, "public"), {
-		index: false, // Don't serve index.html from public
-		extensions: ["css", "png", "jpg", "jpeg", "gif", "svg", "ico"], // Only serve these extensions from root
-	}),
-);
+// Serve static files - Apontando para pasta dist do Vite
+app.use(express.static(path.join(__dirname, "dist")));
 
 // Helper function to extract YouTube ID
 function extractYouTubeId(url) {
@@ -117,44 +109,6 @@ function renderBlocksHTML(blocks) {
 		})
 		.join("");
 }
-
-// Routes
-app.get("/", (req, res) => {
-	res.render("pages/index", {
-		title: "Opine Agora SC - Opinião com Credibilidade",
-		description:
-			"Portal de notícias de Santa Catarina com foco em informação local, política, economia e opinião. Comprometido com a verdade e a transparência.",
-		image: "",
-		url: req.protocol + "://" + req.get("host") + req.originalUrl,
-		isDev,
-	});
-});
-
-app.get("/login", (req, res) => {
-	res.render("pages/login", {
-		title: "Login - Opine Agora SC",
-		description: "Área administrativa do portal Opine Agora SC",
-		image: "",
-		url: req.protocol + "://" + req.get("host") + req.originalUrl,
-		isDev,
-	});
-});
-
-app.get("/admin", async (req, res) => {
-	// TODO: Implement proper session verification
-	// const { data: { session } } = await supabase.auth.getSession();
-	// if (!session) {
-	// 	return res.redirect('/login');
-	// }
-
-	res.render("pages/admin", {
-		title: "Dashboard Admin - Opine Agora SC",
-		description: "Painel administrativo do portal Opine Agora SC",
-		image: "",
-		url: req.protocol + "://" + req.get("host") + req.originalUrl,
-		isDev,
-	});
-});
 
 // ===== API ROUTES =====
 
@@ -440,6 +394,11 @@ app.get("/post/:id", async (req, res) => {
 		console.error("Error fetching post:", error);
 		res.status(500).send("Erro ao carregar notícia");
 	}
+});
+
+// ===== CATCH-ALL ROUTE PARA REACT =====
+app.get("*", (req, res) => {
+	res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
 // Start server
