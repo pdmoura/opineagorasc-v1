@@ -1,35 +1,41 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {
-      colors: {
-        navy: '#1a365d',
-        'teal-primary': '#008080',
-        'orange-warm': '#ff6b35',
-        'text-primary': '#2d3748',
-        'text-secondary': '#718096',
-        'bg-light': '#f7fafc',
-      },
-      fontFamily: {
-        'sans': ['Montserrat', 'system-ui', 'sans-serif'],
-      },
-      borderRadius: {
-        'md': '8px',
-        'lg': '12px',
-      },
-      boxShadow: {
-        'sm': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-        'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-        'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-      },
-      transition: {
-        'default': 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      },
-    },
-  },
-  plugins: [],
-}
+	content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+	theme: {
+		extend: {
+			colors: {
+				navy: "#1a365d",
+				"teal-primary": "#008080",
+				"orange-warm": "#ff6b35",
+				"text-primary": "#2d3748",
+				"text-secondary": "#718096",
+				"bg-light": "#f7fafc",
+			},
+			fontFamily: {
+				sans: ["Montserrat", "system-ui", "sans-serif"],
+			},
+			borderRadius: {
+				md: "8px",
+				lg: "12px",
+			},
+			boxShadow: {
+				sm: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+				md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+				lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+			},
+			transition: {
+				default: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+			},
+			animation: {
+				"fade-in": "fadeIn 0.5s ease-in-out",
+			},
+			keyframes: {
+				fadeIn: {
+					"0%": { opacity: "0", transform: "translateY(10px)" },
+					"100%": { opacity: "1", transform: "translateY(0)" },
+				},
+			},
+		},
+	},
+	plugins: [],
+};

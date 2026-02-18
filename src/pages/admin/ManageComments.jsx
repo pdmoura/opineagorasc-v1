@@ -114,12 +114,20 @@ const ManageComments = () => {
 	const approveSelectedComments = async () => {
 		const selectedIds = Array.from(selectedComments);
 		try {
-			for (const id of selectedIds) {
-				await approveComment(id);
-			}
-			toast.success(
-				`${selectedIds.length} comentários aprovados com sucesso!`,
+			let successCount = 0;
+			// Use Promise.all for parallel execution
+			await Promise.all(
+				selectedIds.map(async (id) => {
+					const result = await approveComment(id, true); // true = silent
+					if (result) successCount++;
+				}),
 			);
+
+			if (successCount > 0) {
+				toast.success(
+					`${successCount} comentário${successCount !== 1 ? "s" : ""} aprovado${successCount !== 1 ? "s" : ""} com sucesso!`,
+				);
+			}
 			setSelectedComments(new Set());
 		} catch (error) {
 			toast.error("Erro ao aprovar comentários");
@@ -128,14 +136,23 @@ const ManageComments = () => {
 
 	const confirmDelete = async () => {
 		try {
-			for (const id of deleteModal.ids) {
-				await supabase.from("comments").delete().eq("id", id);
-			}
-			toast.success(
-				deleteModal.isBulk
-					? `${deleteModal.ids.length} comentários removidos com sucesso!`
-					: "Comentário removido com sucesso!",
+			let successCount = 0;
+			// Use Promise.all for parallel execution and optimistic UI updates from hook
+			await Promise.all(
+				deleteModal.ids.map(async (id) => {
+					const result = await rejectComment(id, true); // true = silent
+					if (result) successCount++;
+				}),
 			);
+
+			if (successCount > 0) {
+				toast.success(
+					deleteModal.isBulk
+						? `${successCount} comentário${successCount !== 1 ? "s" : ""} removido${successCount !== 1 ? "s" : ""} com sucesso!`
+						: "Comentário removido com sucesso!",
+				);
+			}
+
 			setDeleteModal({
 				isOpen: false,
 				comments: [],
@@ -143,7 +160,7 @@ const ManageComments = () => {
 				isBulk: false,
 			});
 			setSelectedComments(new Set());
-			fetchComments();
+			// fetchComments(); // No longer needed as rejectComment updates local state optimistically
 		} catch (error) {
 			toast.error("Erro ao remover comentários");
 		}

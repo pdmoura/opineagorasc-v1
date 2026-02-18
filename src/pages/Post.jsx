@@ -23,6 +23,7 @@ import SocialShare from "../components/public/SocialShare";
 
 // Hooks
 import { usePost, usePosts } from "../hooks/usePosts";
+import { useRelatedPosts } from "../hooks/useRelatedPosts";
 import { useComments, useSubmitComment } from "../hooks/useComments";
 import { usePostViews } from "../hooks/usePostViews";
 
@@ -32,7 +33,7 @@ import { formatDate, formatDateTime, getSocialShareUrls } from "../lib/utils";
 const Post = () => {
 	const { slug } = useParams();
 	const { post, loading, error } = usePost(slug);
-	const { posts } = usePosts(null, 4);
+	const { posts: relatedPosts } = useRelatedPosts(post, 4);
 	const { comments: commentsData, loading: commentsLoading } = useComments(
 		post?.id,
 	);
@@ -42,7 +43,6 @@ const Post = () => {
 	const [currentSlide, setCurrentSlide] = useState(0);
 	const [comments, setComments] = useState([]);
 	const [sortBy, setSortBy] = useState("latest");
-	const [relatedPosts, setRelatedPosts] = useState([]);
 	const [showComments, setShowComments] = useState(true);
 
 	// Sync comments when loaded
@@ -67,7 +67,7 @@ const Post = () => {
 	// Scroll to top when post loads
 	useEffect(() => {
 		if (post && !loading) {
-			window.scrollTo({ top: 0, behavior: "smooth" });
+			window.scrollTo(0, 0);
 			// Track view when post is loaded
 			trackView();
 		}
@@ -583,8 +583,8 @@ const Post = () => {
 							</div>
 
 							{/* Right side - Social Share */}
-							<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-								<span className="font-medium text-text-primary">
+							<div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-2">
+								<span className="text-base font-semibold text-text-primary">
 									Compartilhar:
 								</span>
 								<div className="flex items-center space-x-2">
@@ -617,7 +617,7 @@ const Post = () => {
 										href={shareUrls.twitter}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="p-2 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition-colors"
+										className="p-2 bg-[#0f1419] text-white rounded-full hover:bg-sky-500 transition-colors"
 										aria-label="Compartilhar no Twitter"
 									>
 										<svg
@@ -742,14 +742,14 @@ const Post = () => {
 			</div>
 
 			{/* Related Posts */}
-			{posts && posts.length > 0 && (
+			{relatedPosts && relatedPosts.length > 0 && (
 				<section className="bg-gray-50 py-12 mt-12">
 					<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 						<h2 className="section-title mb-8">
 							Matérias Relacionadas
 						</h2>
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-							{posts
+							{relatedPosts
 								.filter((p) => p.id !== post.id)
 								.slice(0, 4)
 								.map((relatedPost) => (

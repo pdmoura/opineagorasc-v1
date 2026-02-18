@@ -73,6 +73,34 @@ export const usePosts = (category = null, limit = null) => {
 		};
 
 		fetchPosts();
+
+		// Realtime subscription with debounce to prevent race conditions
+		let channel = null;
+		const timeoutId = setTimeout(() => {
+			channel = supabase
+				.channel("public:posts")
+				.on(
+					"postgres_changes",
+					{
+						event: "*",
+						schema: "public",
+						table: "posts",
+					},
+					() => {
+						fetchPosts();
+					},
+				)
+				.subscribe();
+		}, 100);
+
+		return () => {
+			clearTimeout(timeoutId);
+			if (channel) {
+				supabase.removeChannel(channel).catch(() => {
+					// Ignore cleanup errors
+				});
+			}
+		};
 	}, [category, limit]);
 
 	return { posts, loading, error };
@@ -158,6 +186,33 @@ export const usePost = (slug) => {
 		};
 
 		fetchPost();
+
+		// Realtime subscription for single post with debounce
+		let channel = null;
+		const timeoutId = setTimeout(() => {
+			channel = supabase
+				.channel(`public:posts:slug=eq.${slug}`)
+				.on(
+					"postgres_changes",
+					{
+						event: "*",
+						schema: "public",
+						table: "posts",
+						filter: `slug=eq.${slug}`,
+					},
+					() => {
+						fetchPost();
+					},
+				)
+				.subscribe();
+		}, 100);
+
+		return () => {
+			clearTimeout(timeoutId);
+			if (channel) {
+				supabase.removeChannel(channel).catch(() => {});
+			}
+		};
 	}, [slug]);
 
 	return { post, loading, error };
@@ -226,6 +281,33 @@ export const useFeaturedPosts = (limit = 5) => {
 		};
 
 		fetchFeaturedPosts();
+
+		// Realtime subscription with debounce
+		let channel = null;
+		const timeoutId = setTimeout(() => {
+			channel = supabase
+				.channel("public:posts:featured")
+				.on(
+					"postgres_changes",
+					{
+						event: "*",
+						schema: "public",
+						table: "posts",
+						filter: "featured=eq.true",
+					},
+					() => {
+						fetchFeaturedPosts();
+					},
+				)
+				.subscribe();
+		}, 100);
+
+		return () => {
+			clearTimeout(timeoutId);
+			if (channel) {
+				supabase.removeChannel(channel).catch(() => {});
+			}
+		};
 	}, [limit]);
 
 	return { posts, loading, error };

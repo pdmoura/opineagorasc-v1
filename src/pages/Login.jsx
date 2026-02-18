@@ -56,9 +56,6 @@ const Login = () => {
 				data: { session },
 			} = await supabase.auth.getSession();
 			if (session?.user) {
-				console.log(
-					"🔑 Login - User already authenticated, redirecting",
-				);
 				const from = location.state?.from?.pathname || "/admin";
 				navigate(from, { replace: true });
 			}
@@ -100,12 +97,11 @@ const Login = () => {
 
 			if (error) throw error;
 
-			console.log("✅ Login - Authentication successful");
 			toast.success("Login realizado com sucesso!");
 
 			// Redirecionar para a página que o usuário tentou acessar
 			const from = location.state?.from?.pathname || "/admin";
-			console.log("🔑 Login - Redirecting to:", from);
+
 			navigate(from, { replace: true });
 		} catch (error) {
 			console.error("Login error:", error);
@@ -126,7 +122,7 @@ const Login = () => {
 				/>
 			</Helmet>
 
-			<div className="min-h-screen bg-gradient-to-br from-navy to-teal-primary flex items-center justify-center px-4">
+			<div className="min-h-screen bg-gradient-to-br from-navy to-teal-primary flex items-center justify-center px-4 fade-in">
 				<div className="max-w-md w-full">
 					{/* Logo */}
 					<div className="text-center mb-8">

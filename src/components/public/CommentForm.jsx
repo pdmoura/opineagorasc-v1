@@ -14,6 +14,7 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 	const [cooldownTime, setCooldownTime] = useState(0);
 	const [showCooldownMessage, setShowCooldownMessage] = useState(false);
 	const toastShownRef = useRef(false);
+	const submissionLock = useRef(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [errors, setErrors] = useState({});
 	const [touched, setTouched] = useState({});
@@ -116,9 +117,17 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 
+		// Debug log
+		console.log("handleSubmit called", {
+			isSubmitting,
+			submitting,
+			lock: submissionLock.current,
+			timestamp: Date.now(),
+		});
+
 		// Prevenir envios duplicados no formulário
-		if (isSubmitting || submitting) {
-			console.warn("Form submission already in progress");
+		if (isSubmitting || submitting || submissionLock.current) {
+			console.warn("Form submission prevented: already in progress");
 			return;
 		}
 
@@ -158,6 +167,9 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 		}
 
 		try {
+			// Lock submission immediately
+			toastShownRef.current = "submitting";
+			submissionLock.current = true;
 			setIsSubmitting(true);
 
 			// Removemos o honeypot antes de enviar para a base de dados
@@ -178,6 +190,8 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 				);
 				setCooldownTime(5);
 				setShowCooldownMessage(true); // Ativa a mensagem para próximos comentários
+				// Keep toastShownRef as true for cooldown message
+				toastShownRef.current = true;
 
 				// Reset form on success
 				setFormData({
@@ -189,12 +203,23 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 				// Reset errors e touched
 				setErrors({});
 				setTouched({});
+			} else {
+				// If result is false (failed), reset the lock
+				toastShownRef.current = false;
 			}
 		} catch (error) {
 			// Error é tratado no hook, mas mantemos try/catch por segurança
 			console.error("Error in form submission:", error);
+			toastShownRef.current = false;
 		} finally {
 			setIsSubmitting(false);
+			submissionLock.current = false;
+			console.log("Submission finished, lock released");
+
+			// Fix toastShownRef state if it was stuck in submitting
+			if (toastShownRef.current === "submitting") {
+				toastShownRef.current = false;
+			}
 		}
 	};
 

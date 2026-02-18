@@ -46,7 +46,6 @@ export const usePostViews = (postId) => {
 					filter: `id=eq.${postId}`,
 				},
 				(payload) => {
-					console.log("Realtime update received:", payload);
 					if (payload.new && payload.new.view_count !== undefined) {
 						setViewCount(payload.new.view_count);
 					}
@@ -67,7 +66,6 @@ export const usePostViews = (postId) => {
 
 		// IMMEDIATE SYNC LOCK: Set session storage BEFORE anything else
 		if (sessionStorage.getItem(sessionKey)) {
-			console.log("Post already viewed (session storage).");
 			// Still try to fetch latest count to ensure UI is up to date
 			const { data } = await supabase
 				.from("posts")
@@ -84,8 +82,6 @@ export const usePostViews = (postId) => {
 		try {
 			// Generate a unique request ID for idempotency pattern
 			const requestId = crypto.randomUUID();
-
-			console.log(`Incrementing view count for post ${postId}`);
 
 			// Optimistically update local state
 			setViewCount((prev) => prev + 1);
@@ -147,10 +143,7 @@ export const usePopularPosts = (limit = 10) => {
 
 				if (error) {
 					// Fallback to standard query if RPC doesn't exist
-					console.log(
-						"Popular posts RPC failed, using standard query:",
-						error.message,
-					);
+
 					const { data: standardData, error: standardError } =
 						await supabase
 							.from("posts")
@@ -173,6 +166,32 @@ export const usePopularPosts = (limit = 10) => {
 		};
 
 		fetchPopularPosts();
+
+		// Realtime subscription with debounce
+		let channel = null;
+		const timeoutId = setTimeout(() => {
+			channel = supabase
+				.channel("public:posts:popular")
+				.on(
+					"postgres_changes",
+					{
+						event: "*",
+						schema: "public",
+						table: "posts",
+					},
+					() => {
+						fetchPopularPosts();
+					},
+				)
+				.subscribe();
+		}, 100);
+
+		return () => {
+			clearTimeout(timeoutId);
+			if (channel) {
+				supabase.removeChannel(channel).catch(() => {});
+			}
+		};
 	}, [limit]);
 
 	return { posts, loading, error };

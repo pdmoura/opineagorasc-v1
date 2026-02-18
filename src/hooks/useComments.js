@@ -43,21 +43,46 @@ export const useComments = (postId, status = "approved") => {
 	return { comments, loading, error };
 };
 
+const recentSubmissions = new Set();
+
 export const useSubmitComment = () => {
 	const [submitting, setSubmitting] = useState(false);
 	const submissionInProgress = useRef(false);
 
 	const submitComment = async (commentData) => {
-		// Prevenir envios duplicados
+		// Dedup global (fingerprint)
+		const fingerprint = `${commentData.post_id}-${commentData.email}-${commentData.content.length}`;
+
+		console.log("useSubmitComment called", {
+			isInProgress: submissionInProgress.current,
+			submitting,
+			fingerprint,
+		});
+
+		// Prevenir envios duplicados (Lock de Instância)
 		if (submissionInProgress.current) {
 			console.warn(
-				"Submission already in progress, preventing duplicate",
+				"Submission blocked: already in progress (useSubmitComment)",
 			);
 			return false;
 		}
 
+		// Prevenir envios duplicados (Lock Global)
+		if (recentSubmissions.has(fingerprint)) {
+			console.warn(
+				"Submission blocked: Duplicate submission detected (Global Fingerprint)",
+			);
+			return false;
+		}
+
+		// Add to global set for 10 seconds
+		recentSubmissions.add(fingerprint);
+		setTimeout(() => recentSubmissions.delete(fingerprint), 10000);
+
 		try {
 			submissionInProgress.current = true;
+			// Don't set state immediately if it causes re-renders that might mess with things?
+			// Actually standard practice is fine.
 			setSubmitting(true);
 
 			// Security validation with rate limiting and sanitization
@@ -180,7 +205,7 @@ export const useAdminComments = () => {
 		}
 	};
 
-	const approveComment = async (commentId) => {
+	const approveComment = async (commentId, silent = false) => {
 		try {
 			const { data, error } = await supabase
 				.from("comments")
@@ -191,6 +216,7 @@ export const useAdminComments = () => {
 
 			if (error) throw error;
 
+			// Update local state immediately (Optimistic/Fast UI)
 			setComments((prev) =>
 				prev.map((comment) =>
 					comment.id === commentId
@@ -199,16 +225,16 @@ export const useAdminComments = () => {
 				),
 			);
 
-			toast.success("Comentário aprovado!");
+			if (!silent) toast.success("Comentário aprovado!");
 			return data;
 		} catch (error) {
 			console.error("Error approving comment:", error);
-			toast.error("Erro ao aprovar comentário.");
+			if (!silent) toast.error("Erro ao aprovar comentário.");
 			return false;
 		}
 	};
 
-	const rejectComment = async (commentId) => {
+	const rejectComment = async (commentId, silent = false) => {
 		try {
 			const { error } = await supabase
 				.from("comments")
@@ -217,20 +243,53 @@ export const useAdminComments = () => {
 
 			if (error) throw error;
 
+			// Update local state immediately
 			setComments((prev) =>
 				prev.filter((comment) => comment.id !== commentId),
 			);
-			toast.success("Comentário rejeitado e removido!");
+
+			if (!silent) toast.success("Comentário rejeitado e removido!");
 			return true;
 		} catch (error) {
 			console.error("Error rejecting comment:", error);
-			toast.error("Erro ao rejeitar comentário.");
+			if (!silent) toast.error("Erro ao rejeitar comentário.");
 			return false;
 		}
 	};
 
+	// Real-time subscription
 	useEffect(() => {
 		fetchComments();
+
+		const channel = supabase
+			.channel("admin-comments-changes")
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "comments",
+				},
+				(payload) => {
+					console.log("Real-time change received:", payload);
+
+					// Handle DELETE events locally to avoid race conditions with re-fetching stuck data
+					if (payload.eventType === "DELETE") {
+						setComments((prev) =>
+							prev.filter((c) => c.id !== payload.old.id),
+						);
+					} else {
+						// For INSERT/UPDATE, we fetch to get the post title relation
+						// We can debounce this if needed, but for admin panel it's fine
+						fetchComments();
+					}
+				},
+			)
+			.subscribe();
+
+		return () => {
+			supabase.removeChannel(channel);
+		};
 	}, []);
 
 	return {

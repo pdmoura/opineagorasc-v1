@@ -61,14 +61,9 @@ const Footer = () => {
 	const navigation = {
 		principal: [
 			{ name: "Início", href: "/" },
-			{ name: "Política", href: "/categoria/Política" },
-			{ name: "Economia", href: "/categoria/Economia" },
-			{ name: "Sociedade", href: "/categoria/Sociedade" },
-			{ name: "Esportes", href: "/categoria/Esportes" },
-			{ name: "Cultura", href: "/categoria/Cultura" },
-			{ name: "Tecnologia", href: "/categoria/Tecnologia" },
-			{ name: "Saúde", href: "/categoria/Saúde" },
-			{ name: "Educação", href: "/categoria/Educação" },
+			{ name: "Eleições", href: "/eleicoes" },
+			{ name: "Concórdia", href: "/concordia" },
+			{ name: "Categorias", href: "/categoria/todas" },
 		],
 		empresa: [
 			{ name: "Sobre Nós", href: "/sobre" },
@@ -134,8 +129,8 @@ const Footer = () => {
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 					{/* Logo e Descrição */}
-					<div className="lg:col-span-1">
-						<div className="flex flex-col space-y-4">
+					<div className="lg:col-span-1 text-center md:text-left">
+						<div className="flex flex-col items-center md:items-start space-y-4">
 							<div className="flex items-center space-x-3">
 								<div className="bg-white rounded-lg p-3 shadow-lg">
 									<div className="flex flex-col items-start">
@@ -143,7 +138,7 @@ const Footer = () => {
 											<span className="font-montserrat text-xl font-black tracking-tight leading-none text-navy">
 												OPINE
 											</span>
-											<span className="font-montserrat text-xl font-black tracking-tight leading-none text-orange-warm">
+											<span className="font-montserrat text-xl font-black tracking-tight leading-none text-orange-600">
 												AGORA
 											</span>
 											<span className="font-montserrat text-xs font-bold text-navy bg-cream px-1.5 py-0.5 rounded ml-1">
@@ -186,16 +181,16 @@ const Footer = () => {
 					</div>
 
 					{/* Navegação Principal */}
-					<div>
-						<h4 className="text-base font-semibold mb-3 text-teal-300">
+					<div className="text-center md:text-left">
+						<h5 className="text-sm font-semibold uppercase tracking-wider mb-4 text-teal-300">
 							Navegação
-						</h4>
-						<ul className="space-y-1">
+						</h5>
+						<ul className="space-y-2 flex flex-col items-center md:items-start">
 							{navigation.principal.map((item) => (
 								<li key={item.name}>
 									<Link
 										to={item.href}
-										className="text-gray-200 hover:text-white transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-[var(--navy)] rounded"
+										className="text-gray-200 hover:text-orange-600 transition-colors text-sm font-medium focus:outline-none rounded"
 									>
 										{item.name}
 									</Link>
@@ -205,16 +200,16 @@ const Footer = () => {
 					</div>
 
 					{/* Empresa */}
-					<div>
-						<h4 className="text-base font-semibold mb-3 text-teal-300">
+					<div className="text-center md:text-left">
+						<h5 className="text-sm font-semibold uppercase tracking-wider mb-4 text-teal-300">
 							Empresa
-						</h4>
-						<ul className="space-y-1">
+						</h5>
+						<ul className="space-y-2 flex flex-col items-center md:items-start">
 							{navigation.empresa.map((item) => (
 								<li key={item.name}>
 									<Link
 										to={item.href}
-										className="text-gray-200 hover:text-white transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-[var(--navy)] rounded"
+										className="text-gray-200 hover:text-orange-600 transition-colors text-sm font-medium focus:outline-none rounded"
 									>
 										{item.name}
 									</Link>
@@ -224,18 +219,18 @@ const Footer = () => {
 					</div>
 
 					{/* Contato */}
-					<div>
-						<h4 className="text-base font-semibold mb-3 text-teal-300">
+					<div className="text-center md:text-left">
+						<h5 className="text-sm font-semibold uppercase tracking-wider mb-4 text-teal-300">
 							Contato
-						</h4>
-						<ul className="space-y-2">
+						</h5>
+						<ul className="space-y-3 flex flex-col items-center md:items-start">
 							{navigation.contato.map((item, index) => {
 								const Icon = item.icon;
 								return (
 									<li key={index}>
 										<a
 											href={item.href}
-											className="flex items-center space-x-2 text-gray-200 hover:text-white transition-colors text-sm font-medium"
+											className="flex items-center space-x-2 text-gray-200 hover:text-orange-600 transition-colors text-sm font-medium focus:outline-none"
 										>
 											<Icon className="w-3 h-3 flex-shrink-0" />
 											<span>{item.text}</span>
@@ -246,7 +241,7 @@ const Footer = () => {
 						</ul>
 
 						{/* Newsletter */}
-						<div className="mt-4">
+						<div className="mt-4 text-center md:text-left">
 							<h5 className="text-sm font-semibold mb-2 text-teal-300">
 								Newsletter
 							</h5>
@@ -254,24 +249,26 @@ const Footer = () => {
 								Receba as principais notícias no seu e-mail.
 							</p>
 							<form
-								className="flex flex-col space-y-2"
+								className="flex flex-col items-center md:items-start space-y-2"
 								onSubmit={handleNewsletterSubmit}
 							>
-								<input
-									type="email"
-									placeholder="Seu e-mail"
-									value={newsletterEmail}
-									onChange={(e) =>
-										setNewsletterEmail(e.target.value)
-									}
-									className="px-3 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent text-sm font-medium shadow-lg"
-									required
-									disabled={submitting}
-								/>
+								<div className="w-full relative min-w-0">
+									<input
+										type="email"
+										placeholder="Seu e-mail"
+										value={newsletterEmail}
+										onChange={(e) =>
+											setNewsletterEmail(e.target.value)
+										}
+										className="w-full px-3 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent text-sm font-medium shadow-lg"
+										required
+										disabled={submitting}
+									/>
+								</div>
 								<button
 									type="submit"
 									disabled={submitting}
-									className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+									className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
 								>
 									{submitting ? (
 										<>
@@ -295,12 +292,21 @@ const Footer = () => {
 					<div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-200 font-medium">
 						<p>
 							{currentYear} Opine{" "}
-							<span className="text-orange-warm">Agora</span> SC.
+							<span className="text-orange-600">Agora</span> SC.
 							Todos os direitos reservados. | opineagorasc.com.br
 						</p>
 						<div className="flex items-center space-x-3 mt-2 md:mt-0">
 							<span>
-								<a href="https://www.linkedin.com/in/pedroalves0/" target="_blank" rel="noopener noreferrer">Desenvolvido por <span className="text-orange-warm border-b-2">Pedro Alves</span></a>
+								<a
+									href="https://www.linkedin.com/in/pedroalves0/"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									Desenvolvido por{" "}
+									<span className="text-orange-600 border-b-2">
+										Pedro Alves
+									</span>
+								</a>
 							</span>
 						</div>
 					</div>

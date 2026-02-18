@@ -46,8 +46,12 @@ export const formatRelativeTime = (date) => {
 	const dateObj = new Date(date);
 	const now = new Date();
 
-	const days = differenceInDays(now, dateObj);
+	const minutes = differenceInMinutes(now, dateObj);
+	if (minutes < 1) {
+		return "1 minuto atrás";
+	}
 
+	const days = differenceInDays(now, dateObj);
 	if (days < 10) {
 		if (days > 0) {
 			return `${days} ${days === 1 ? "dia" : "dias"} atrás`;
@@ -58,7 +62,6 @@ export const formatRelativeTime = (date) => {
 			return `${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
 		}
 
-		const minutes = differenceInMinutes(now, dateObj);
 		return `${minutes} ${minutes === 1 ? "minuto" : "minutos"} atrás`;
 	}
 

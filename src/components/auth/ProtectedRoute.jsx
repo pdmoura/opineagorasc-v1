@@ -7,11 +7,7 @@ const ProtectedRoute = ({ children }) => {
 	const location = useLocation();
 
 	// Log para debug
-	useEffect(() => {
-		console.log("🔐 ProtectedRoute - User:", user);
-		console.log("🔐 ProtectedRoute - Loading:", loading);
-		console.log("🔐 ProtectedRoute - Path:", location.pathname);
-	}, [user, loading, location.pathname]);
+	useEffect(() => {}, [user, loading, location.pathname]);
 
 	if (loading) {
 		return (
@@ -25,11 +21,9 @@ const ProtectedRoute = ({ children }) => {
 	}
 
 	if (!user) {
-		console.log("🚫 ProtectedRoute - No user, redirecting to login");
 		return <Navigate to="/login" state={{ from: location }} replace />;
 	}
 
-	console.log("✅ ProtectedRoute - User authenticated, allowing access");
 	return children;
 };
 

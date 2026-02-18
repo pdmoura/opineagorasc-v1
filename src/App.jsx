@@ -1,4 +1,4 @@
-import { Routes, Route, BrowserRouter } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Toaster } from "react-hot-toast";
 import { useSmoothScroll } from "./hooks/useSmoothScroll";
@@ -18,6 +18,7 @@ import Category from "./pages/Category";
 import Eleicoes from "./pages/Eleicoes";
 import Concordia from "./pages/Concordia";
 import Sobre from "./pages/Sobre";
+import Contact from "./pages/Contact";
 import TodasCategorias from "./pages/TodasCategorias";
 import Search from "./pages/Search";
 import PoliticaTermos from "./pages/PoliticaTermos";
@@ -34,6 +35,7 @@ import AdForm from "./components/admin/AdForm";
 // Components
 import Header from "./components/public/Header";
 import Footer from "./components/public/Footer";
+import ScrollToTopButton from "./components/public/ScrollToTopButton";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import PublicRoute from "./components/auth/PublicRoute";
 import AdminRoute from "./components/auth/AdminRoute";
@@ -43,6 +45,7 @@ import { useAuth } from "./hooks/useAuth";
 
 function App() {
 	const { user, loading } = useAuth();
+	const location = useLocation();
 	useSmoothScroll(); // Hook para scroll suave global
 
 	if (loading) {
@@ -266,7 +269,10 @@ function App() {
 					element={
 						<>
 							<Header />
-							<main className="flex-1">
+							<main
+								key={location.pathname}
+								className="flex-1 fade-in"
+							>
 								<Routes>
 									<Route path="/" element={<Home />} />
 									<Route
@@ -282,6 +288,10 @@ function App() {
 										element={<Concordia />}
 									/>
 									<Route path="/sobre" element={<Sobre />} />
+									<Route
+										path="/contato"
+										element={<Contact />}
+									/>
 									<Route
 										path="/categoria/todas"
 										element={<TodasCategorias />}
@@ -341,6 +351,7 @@ function App() {
 					},
 				}}
 			/>
+			<ScrollToTopButton />
 		</div>
 	);
 }

@@ -94,22 +94,17 @@ export const useNewsletters = () => {
 
 	const deleteNewsletter = async (id) => {
 		try {
-			console.log("Attempting to delete newsletter with ID:", id);
-
 			const { data, error } = await supabase
 				.from("newsletter_subscriptions")
 				.delete()
 				.eq("id", id)
 				.select();
 
-			console.log("Delete response:", { data, error });
-
 			if (error) {
 				console.error("Supabase delete error:", error);
 				throw error;
 			}
 
-			console.log("Newsletter deleted successfully");
 			await fetchNewsletters(); // Refresh the list
 		} catch (error) {
 			console.error("Error deleting newsletter:", error);

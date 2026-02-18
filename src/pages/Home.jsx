@@ -107,6 +107,32 @@ const Home = () => {
 		};
 
 		fetchAds();
+
+		// Realtime subscription with debounce
+		let channel = null;
+		const timeoutId = setTimeout(() => {
+			channel = supabase
+				.channel("public:ads")
+				.on(
+					"postgres_changes",
+					{
+						event: "*",
+						schema: "public",
+						table: "ads",
+					},
+					() => {
+						fetchAds();
+					},
+				)
+				.subscribe();
+		}, 100);
+
+		return () => {
+			clearTimeout(timeoutId);
+			if (channel) {
+				supabase.removeChannel(channel).catch(() => {});
+			}
+		};
 	}, []);
 
 	const handleNewsletterSubmit = async (e) => {
@@ -266,8 +292,8 @@ const Home = () => {
 
 			{/* Top Banner Ad Section */}
 			{bannerAds.length > 0 && (
-				<div className="bg-gray-100 border-b border-gray-200">
-					<div className="max-w-7xl mx-auto">
+				<div className="bg-gray-100 border-b border-gray-200 w-full">
+					<div className="w-full">
 						<Swiper
 							modules={[Autoplay]}
 							spaceBetween={0}
@@ -293,14 +319,14 @@ const Home = () => {
 												<img
 													src={ad.image_url}
 													alt={ad.title}
-													className="w-full h-auto max-h-[150px] object-cover md:object-contain"
+													className="w-full h-auto object-cover"
 												/>
 											</a>
 										) : (
 											<img
 												src={ad.image_url}
 												alt={ad.title}
-												className="w-full h-auto max-h-[150px] object-cover md:object-contain"
+												className="w-full h-auto object-cover"
 											/>
 										)}
 									</div>
@@ -312,58 +338,95 @@ const Home = () => {
 			)}
 
 			{/* Hero Section */}
-			<section className="bg-gradient-to-br from-navy to-teal-primary text-white py-20">
+			<section className="bg-gradient-to-br from-navy to-teal-primary text-white py-8 md:py-12">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-						<div className="fade-in">
-							<h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-								Informação com
-								<span className="text-orange-warm">
-									{" "}
-									Credibilidade{" "}
-								</span>
-								para Santa Catarina
-							</h1>
-							<p className="text-xl mb-8 text-gray-100">
-								Portal de notícias comprometido com a verdade,
-								transparência e jornalismo de qualidade para a
-								sociedade catarinense.
-							</p>
-							<div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-								<Link
-									to="/categoria/todas"
-									className="btn-primary bg-orange-warm hover:bg-orange-600 inline-flex items-center justify-center space-x-2"
-								>
-									<Newspaper className="w-5 h-5" />
-									<span>Últimas Notícias</span>
-								</Link>
+					<Swiper
+						modules={[Autoplay, Pagination, Navigation]}
+						spaceBetween={30}
+						slidesPerView={1}
+						pagination={{ clickable: true }}
+						autoplay={{
+							delay: 5000,
+							disableOnInteraction: false,
+						}}
+						loop={true}
+						className="hero-swiper"
+					>
+						{/* Slide 1: Welcome Message */}
+						<SwiperSlide>
+							<div className="flex flex-col items-center justify-center text-center h-full min-h-[350px] lg:min-h-[450px] px-4">
+								<h1 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-tight max-w-4xl">
+									Informação com
+									<span className="text-orange-warm">
+										{" "}
+										Credibilidade{" "}
+									</span>
+									para Santa Catarina
+								</h1>
+								<p className="text-lg md:text-xl mb-6 md:mb-8 text-gray-100 max-w-2xl">
+									Portal de notícias comprometido com a
+									verdade, transparência e jornalismo de
+									qualidade para a sociedade catarinense.
+								</p>
+								<div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+									<Link
+										to="/categoria/todas"
+										className="btn-primary bg-orange-600 hover:bg-orange-700 inline-flex items-center justify-center space-x-2 px-8 py-3 text-lg"
+									>
+										<Newspaper className="w-6 h-6" />
+										<span>Últimas Notícias</span>
+									</Link>
+								</div>
 							</div>
-						</div>
+						</SwiperSlide>
 
-						{/* Featured Posts */}
-						<div className="space-y-4">
-							{featuredLoading ? (
-								<>
-									<SkeletonLoader type="horizontal" />
-									<SkeletonLoader type="horizontal" />
-								</>
-							) : (
-								featuredPosts
-									?.slice(0, 2)
-									.map((post, index) => (
-										<div
-											key={post.id}
-											className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors"
-										>
-											<PostCard
-												post={post}
-												variant="horizontal"
-											/>
+						{/* Slides 2+: Featured Posts */}
+						{!featuredLoading &&
+							featuredPosts?.map((post) => (
+								<SwiperSlide key={post.id}>
+									<div className="flex items-center justify-center h-full min-h-[350px] lg:min-h-[450px] px-4">
+										<div className="w-full max-w-6xl">
+											<div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+												<div className="grid grid-cols-1 md:grid-cols-2">
+													<div className="h-56 md:h-auto relative min-h-[250px] md:min-h-full">
+														<img
+															src={post.image}
+															alt={post.title}
+															className="w-full h-full object-cover absolute inset-0"
+														/>
+														<div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden"></div>
+													</div>
+													<div className="p-6 md:p-8 lg:p-12 flex flex-col justify-center text-left">
+														{post.category && (
+															<span className="inline-block px-3 py-1 bg-orange-600 text-white text-xs font-semibold rounded-full mb-3 md:mb-4 w-fit">
+																{post.category}
+															</span>
+														)}
+														<Link
+															to={`/post/${post.slug || post.id}`}
+														>
+															<h2 className="text-xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-4 hover:text-orange-warm transition-colors line-clamp-3 md:line-clamp-none leading-tight">
+																{post.title}
+															</h2>
+														</Link>
+														<p className="text-gray-200 mb-4 md:mb-6 line-clamp-3 hidden md:block text-base md:text-lg">
+															{post.excerpt}
+														</p>
+														<Link
+															to={`/post/${post.slug || post.id}`}
+															className="inline-flex items-center text-orange-warm hover:text-white transition-colors font-semibold text-base md:text-lg"
+														>
+															Ler matéria completa
+															<ChevronRight className="w-5 h-5 ml-1" />
+														</Link>
+													</div>
+												</div>
+											</div>
 										</div>
-									))
-							)}
-						</div>
-					</div>
+									</div>
+								</SwiperSlide>
+							))}
+					</Swiper>
 				</div>
 			</section>
 
@@ -471,7 +534,7 @@ const Home = () => {
 											to={`/post/${post.slug || post.id}`}
 											className="flex items-start space-x-3 group"
 										>
-											<span className="text-3xl font-bold text-orange-700 flex-shrink-0">
+											<span className="text-3xl font-bold text-orange-600 flex-shrink-0">
 												{String(index + 1).padStart(
 													2,
 													"0",
@@ -499,7 +562,7 @@ const Home = () => {
 							<p className="text-sm text-text-secondary mb-4">
 								Entre em contato pelo WhatsApp
 							</p>
-							<button className="btn-primary text-sm">
+							<button className="w-full btn-primary bg-navy hover:bg-teal-primary text-sm">
 								Contatar Anunciante
 							</button>
 						</div>
@@ -507,7 +570,7 @@ const Home = () => {
 						{/* Comunidade WhatsApp */}
 						<div className="card border-4 border-teal-primary">
 							<div className="p-6 text-center">
-								<div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+								<div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
 									<WhatsAppIcon className="w-8 h-8 text-white" />
 								</div>
 								<h3 className="text-lg font-bold text-navy mb-3">
@@ -522,7 +585,7 @@ const Home = () => {
 									href="https://chat.whatsapp.com/FPhqmB9FoW4HH67zJnVWD2"
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center justify-center w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+									className="inline-flex items-center justify-center w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
 								>
 									<Users className="w-5 h-5 mr-2" />
 									<span>ENTRAR NA COMUNIDADE</span>
@@ -589,7 +652,7 @@ const Home = () => {
 							<Megaphone className="w-6 h-6 text-teal-primary" />
 							<span>
 								Anúncios{" "}
-								<span className="text-orange-warm">
+								<span className="text-orange-600">
 									Destaque
 								</span>
 							</span>
@@ -705,19 +768,23 @@ const Home = () => {
 						onSubmit={handleNewsletterSubmit}
 						className="flex flex-col sm:flex-row max-w-md mx-auto space-y-4 sm:space-y-0 sm:space-x-4"
 					>
-						<input
-							type="email"
-							value={newsletterEmail}
-							onChange={(e) => setNewsletterEmail(e.target.value)}
-							placeholder="Seu melhor e-mail"
-							className="flex-1 px-4 py-3 rounded-lg text-navy placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
-							required
-							disabled={submitting}
-						/>
+						<div className="w-full sm:flex-1 relative min-w-0">
+							<input
+								type="email"
+								value={newsletterEmail}
+								onChange={(e) =>
+									setNewsletterEmail(e.target.value)
+								}
+								placeholder="Seu melhor e-mail"
+								className="w-full px-4 py-3 rounded-lg text-navy placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+								required
+								disabled={submitting}
+							/>
+						</div>
 						<button
 							type="submit"
 							disabled={submitting}
-							className="px-6 py-3 bg-white text-teal-primary rounded-lg hover:bg-gray-100 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+							className="group px-6 py-3 bg-white text-teal-primary rounded-lg hover:bg-orange-600 hover:text-white transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
 						>
 							{submitting ? (
 								<>
@@ -726,7 +793,7 @@ const Home = () => {
 								</>
 							) : (
 								<>
-									<Mail className="w-5 h-5 !text-orange-warm" />
+									<Mail className="w-5 h-5 text-orange-600 group-hover:text-white transition-colors" />
 									<span>Inscrever-se</span>
 								</>
 							)}

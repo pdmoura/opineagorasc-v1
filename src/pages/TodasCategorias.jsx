@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Newspaper, Filter, ArrowRight } from "lucide-react";
@@ -22,6 +22,20 @@ const TodasCategorias = () => {
 	} = useCategories();
 	const [selectedCategory, setSelectedCategory] = useState(null);
 	const [sortBy, setSortBy] = useState("latest");
+	const postsRef = useRef(null);
+
+	const handleCategoryClick = (category) => {
+		setSelectedCategory(category);
+		// Scroll to posts on mobile
+		if (window.innerWidth < 1024) {
+			setTimeout(() => {
+				postsRef.current?.scrollIntoView({
+					behavior: "smooth",
+					block: "start",
+				});
+			}, 100);
+		}
+	};
 
 	// Filter posts by selected category
 	const filteredPosts = selectedCategory
@@ -101,9 +115,9 @@ const TodasCategorias = () => {
 				</div>
 
 				<div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-					{/* Categories Sidebar */}
+					{/* Categories Sidebar / Topbar */}
 					<div className="lg:col-span-1">
-						<div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+						<div className="bg-white rounded-lg shadow-md p-4 lg:p-6 sticky top-4">
 							<div className="flex items-center space-x-2 mb-4">
 								<Filter className="w-5 h-5 text-teal-primary" />
 								<h2 className="text-lg font-bold text-navy">
@@ -111,53 +125,56 @@ const TodasCategorias = () => {
 								</h2>
 							</div>
 
-							{/* All Categories Option */}
-							<button
-								onClick={() => setSelectedCategory(null)}
-								className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors mb-2 ${
-									!selectedCategory
-										? "bg-teal-primary text-white"
-										: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-								}`}
-							>
-								<div className="flex items-center justify-between">
-									<span>Todas as Notícias</span>
-									<span className="text-sm font-bold text-white bg-teal-600 px-2 py-1 rounded-full">
-										{posts?.length || 0}
-									</span>
-								</div>
-							</button>
-
-							{/* Individual Categories */}
-							{categories?.map((category) => (
+							<div className="flex flex-col gap-2">
+								{/* All Categories Option */}
 								<button
-									key={category}
-									onClick={() =>
-										setSelectedCategory(category)
-									}
-									className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors mb-2 ${
-										selectedCategory === category
+									onClick={() => handleCategoryClick(null)}
+									className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors mb-0 border-transparent ${
+										!selectedCategory
 											? "bg-teal-primary text-white"
 											: "bg-gray-100 text-gray-700 hover:bg-gray-200"
 									}`}
 								>
 									<div className="flex items-center justify-between">
-										<span>{category}</span>
-										<span
-											className={`text-sm font-bold px-2 py-1 rounded-full ${
-												selectedCategory === category
-													? "text-white bg-orange-500"
-													: "text-white bg-teal-600"
-											}`}
-										>
-											{getCategoryCount(category)}
+										<span>Todas as Notícias</span>
+										<span className="text-sm font-bold text-white bg-teal-600 px-2 py-1 rounded-full">
+											{posts?.length || 0}
 										</span>
 									</div>
 								</button>
-							))}
 
-							{/* Quick Links */}
-							<div className="mt-6 pt-6 border-t border-gray-200">
+								{/* Individual Categories */}
+								{categories?.map((category) => (
+									<button
+										key={category}
+										onClick={() =>
+											handleCategoryClick(category)
+										}
+										className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors mb-0 border-transparent ${
+											selectedCategory === category
+												? "bg-teal-primary text-white"
+												: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+										}`}
+									>
+										<div className="flex items-center justify-between">
+											<span>{category}</span>
+											<span
+												className={`text-sm font-bold px-2 py-1 rounded-full ${
+													selectedCategory ===
+													category
+														? "text-white bg-orange-500"
+														: "text-white bg-teal-600"
+												}`}
+											>
+												{getCategoryCount(category)}
+											</span>
+										</div>
+									</button>
+								))}
+							</div>
+
+							{/* Quick Links - Hidden on mobile to save space, visible on desktop */}
+							<div className="hidden lg:block mt-6 pt-6 border-t border-gray-200">
 								<h3 className="text-lg font-semibold text-navy mb-4">
 									Links Rápidos
 								</h3>
@@ -196,10 +213,13 @@ const TodasCategorias = () => {
 					</div>
 
 					{/* Posts Content */}
-					<div className="lg:col-span-3">
-						<div className="bg-white rounded-lg shadow-md p-6">
+					<div className="lg:col-span-3 scroll-mt-24" ref={postsRef}>
+						<div
+							key={selectedCategory || "all"}
+							className="bg-white rounded-lg shadow-md p-6 fade-in scroll-mt-24"
+						>
 							{/* Header with sort */}
-							<div className="flex items-center justify-between mb-6">
+							<div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
 								<h2 className="text-xl font-bold text-navy">
 									{selectedCategory
 										? `Notícias de ${selectedCategory}`
@@ -209,19 +229,25 @@ const TodasCategorias = () => {
 										{sortedPosts.length !== 1 ? "s" : ""})
 									</span>
 								</h2>
-								<select
-									value={sortBy}
-									onChange={(e) => setSortBy(e.target.value)}
-									className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
-								>
-									<option value="latest">
-										Mais recentes
-									</option>
-									<option value="oldest">Mais antigas</option>
-									<option value="title">
-										Ordem alfabética
-									</option>
-								</select>
+								<div className="flex items-center gap-2 self-end md:self-auto w-full md:w-auto">
+									<select
+										value={sortBy}
+										onChange={(e) =>
+											setSortBy(e.target.value)
+										}
+										className="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+									>
+										<option value="latest">
+											Mais recentes
+										</option>
+										<option value="oldest">
+											Mais antigas
+										</option>
+										<option value="title">
+											Ordem alfabética
+										</option>
+									</select>
+								</div>
 							</div>
 
 							{/* Posts Grid */}

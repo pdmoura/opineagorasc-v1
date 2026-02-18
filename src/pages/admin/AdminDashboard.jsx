@@ -41,7 +41,6 @@ const AdminDashboard = () => {
 	const handleLogout = async () => {
 		try {
 			await signOut();
-			console.log("🚪 AdminDashboard - User logged out");
 		} catch (error) {
 			console.error("❌ AdminDashboard - Logout error:", error);
 		}
@@ -374,37 +373,23 @@ const AdminDashboard = () => {
 						</div>
 					</div>
 
-					{/* Recent Activity */}
-					<div className="mt-8 bg-white rounded-lg shadow-md p-6 mb-0">
+					{/* Go to Site Button */}
+					<div className="mt-8 bg-white rounded-lg shadow-md p-6 mb-0 text-center">
 						<h2 className="text-lg font-semibold text-navy mb-4">
-							Atividade Recente
+							Acesso Rápido
 						</h2>
-						<div className="space-y-4">
-							<div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-								<Calendar className="w-5 h-5 text-teal-primary" />
-								<div>
-									<p className="text-sm font-medium text-navy">
-										Sistema Online
-									</p>
-									<p className="text-xs text-text-secondary">
-										Todos os sistemas funcionando
-										normalmente
-									</p>
-								</div>
-							</div>
-
-							<div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-								<ThumbsUp className="w-5 h-5 text-green-500" />
-								<div>
-									<p className="text-sm font-medium text-navy">
-										Performance Ótima
-									</p>
-									<p className="text-xs text-text-secondary">
-										Tempo de carregamento: menos de 2s
-									</p>
-								</div>
-							</div>
-						</div>
+						<a
+							href="/"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="inline-flex items-center space-x-2 px-6 py-3 bg-teal-primary hover:bg-teal-900 text-white rounded-lg transition-colors font-medium text-lg"
+						>
+							<LogOut className="w-5 h-5 rotate-180" />
+							<span>Ir para o Site</span>
+						</a>
+						<p className="text-sm text-text-secondary mt-4">
+							Acesse a página inicial do portal em uma nova aba
+						</p>
 					</div>
 				</div>
 			</div>

@@ -21,16 +21,6 @@ const Concordia = () => {
 
 	useEffect(() => {
 		if (posts.length > 0) {
-			console.log(
-				"🔍 Posts disponíveis:",
-				posts.map((p) => ({
-					id: p.id,
-					title: p.title,
-					tags: p.tags,
-					category: p.category,
-				})),
-			);
-
 			// Filtrar posts que mencionam Concórdia em todas as variações
 			const filtered = posts.filter((post) => {
 				const searchTerms = ["concórdia", "concordia"];
@@ -96,19 +86,11 @@ const Concordia = () => {
 					categoryMatch ||
 					tagsMatch;
 				if (match) {
-					console.log("✅ Post encontrado:", post.title, {
-						titleMatch,
-						excerptMatch,
-						contentMatch,
-						categoryMatch,
-						tagsMatch,
-					});
 				}
 
 				return match;
 			});
 
-			console.log("📊 Posts filtrados para Concordia:", filtered.length);
 			setConcordiaPosts(filtered);
 		}
 	}, [posts]);

@@ -83,7 +83,7 @@ const PostCard = ({ post, variant = "default", hideAuthor = false }) => {
 				{category && (
 					<Link
 						to={`/categoria/${encodeURIComponent(category.toLowerCase())}`}
-						className="inline-block px-3 py-1 bg-teal-600 text-white text-xs font-semibold rounded-full mb-3 hover:bg-teal-700 transition-colors"
+						className="inline-block px-3 py-1 bg-navy text-white text-xs font-semibold rounded-full mb-3 hover:bg-teal-600 transition-colors"
 					>
 						{category}
 					</Link>
