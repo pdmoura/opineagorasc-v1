@@ -27,7 +27,7 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 
 	// Verifica se o usuário está no período de "cooldown" de 5 minutos
 	useEffect(() => {
-		const lastComment = localStorage.getItem("lastCommentTime");
+		const lastComment = localStorage.getItem(`lastCommentTime_${postId}`);
 
 		if (lastComment) {
 			const timePassed = Date.now() - parseInt(lastComment);
@@ -46,7 +46,7 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 				if (!toastShownRef.current) {
 					toastShownRef.current = true;
 					toast.error(
-						`Aguarde ${minutesRemaining} minutos para comentar novamente.`,
+						`Aguarde ${minutesRemaining} minutos para comentar novamente neste post.`,
 						{
 							duration: 5000, // 5 segundos
 							position: "top-center",
@@ -54,7 +54,7 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 					);
 				}
 			} else {
-				localStorage.removeItem("lastCommentTime");
+				localStorage.removeItem(`lastCommentTime_${postId}`);
 				setShowCooldownMessage(false);
 				toastShownRef.current = false; // Reset ref when cooldown expires
 			}
@@ -62,7 +62,7 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 			setShowCooldownMessage(false);
 			toastShownRef.current = false; // Reset ref when no cooldown
 		}
-	}, []);
+	}, [postId]);
 
 	// Countdown do cooldown
 	useEffect(() => {
@@ -172,7 +172,10 @@ const CommentForm = ({ postId, onSubmit, submitting }) => {
 			// Verifica se o resultado é truthy (comentário inserido com sucesso)
 			if (result) {
 				// Salva o momento do comentário no navegador
-				localStorage.setItem("lastCommentTime", Date.now().toString());
+				localStorage.setItem(
+					`lastCommentTime_${postId}`,
+					Date.now().toString(),
+				);
 				setCooldownTime(5);
 				setShowCooldownMessage(true); // Ativa a mensagem para próximos comentários
 

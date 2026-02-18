@@ -662,6 +662,51 @@ const Post = () => {
 								</div>
 							</div>
 						)}
+
+						{/* Post Navigation */}
+						{(post.prevPost || post.nextPost) && (
+							<div className="mt-12 pt-8 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-6">
+								{/* Previous Post (Newer) - Left */}
+								<div className="flex flex-col items-start text-left">
+									{post.prevPost ? (
+										<Link
+											to={`/post/${post.prevPost.slug}`}
+											className="group w-full"
+										>
+											<span className="flex items-center text-sm text-gray-500 font-medium mb-2 group-hover:text-teal-primary transition-colors">
+												<ChevronLeft className="w-4 h-4 mr-1" />
+												Matéria Anterior
+											</span>
+											<h4 className="text-lg font-bold text-navy group-hover:text-teal-primary transition-colors line-clamp-2">
+												{post.prevPost.title}
+											</h4>
+										</Link>
+									) : (
+										<div className="hidden md:block" />
+									)}
+								</div>
+
+								{/* Next Post (Older) - Right */}
+								<div className="flex flex-col items-end text-right">
+									{post.nextPost ? (
+										<Link
+											to={`/post/${post.nextPost.slug}`}
+											className="group w-full"
+										>
+											<span className="flex items-center justify-end text-sm text-gray-500 font-medium mb-2 group-hover:text-teal-primary transition-colors">
+												Próxima Matéria
+												<ChevronRight className="w-4 h-4 ml-1" />
+											</span>
+											<h4 className="text-lg font-bold text-navy group-hover:text-teal-primary transition-colors line-clamp-2">
+												{post.nextPost.title}
+											</h4>
+										</Link>
+									) : (
+										<div className="hidden md:block" />
+									)}
+								</div>
+							</div>
+						)}
 					</div>
 				</article>
 

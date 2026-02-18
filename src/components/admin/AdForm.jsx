@@ -147,7 +147,10 @@ const AdForm = () => {
 			return false;
 		}
 
-		if (formData.category !== "banner" && !formData.content.trim()) {
+		if (
+			!["banner", "sidebar"].includes(formData.category) &&
+			!formData.content.trim()
+		) {
 			toast.error("O conteúdo é obrigatório");
 			return false;
 		}
@@ -276,7 +279,9 @@ const AdForm = () => {
 									{/* Title */}
 									<div className="md:col-span-2">
 										<label className="block text-sm font-medium text-gray-700 mb-2">
-											{formData.category === "banner"
+											{["banner", "sidebar"].includes(
+												formData.category,
+											)
 												? "Texto Alternativo (Alt)"
 												: "Título do Anúncio *"}
 										</label>
@@ -287,7 +292,9 @@ const AdForm = () => {
 											onChange={handleInputChange}
 											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
 											placeholder={
-												formData.category === "banner"
+												["banner", "sidebar"].includes(
+													formData.category,
+												)
 													? "Descreva a imagem para acessibilidade"
 													: "Título do anúncio"
 											}
@@ -319,8 +326,10 @@ const AdForm = () => {
 
 									{/* Status */}
 
-									{/* Content - Hidden for Banner */}
-									{formData.category !== "banner" && (
+									{/* Content - Hidden for Banner and Sidebar */}
+									{!["banner", "sidebar"].includes(
+										formData.category,
+									) && (
 										<div className="md:col-span-2">
 											<label className="block text-sm font-medium text-gray-700 mb-2">
 												Conteúdo *

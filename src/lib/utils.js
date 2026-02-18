@@ -1,5 +1,10 @@
 import slugify from "slugify";
-import { format } from "date-fns";
+import {
+	format,
+	differenceInDays,
+	differenceInHours,
+	differenceInMinutes,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 // Slug generation
@@ -25,13 +30,39 @@ export const generateSlug = (title, existingSlugs = []) => {
 
 // Date formatting
 export const formatDate = (date, formatStr = "dd/MM/yyyy") => {
+	if (!date) return "";
 	return format(new Date(date), formatStr, { locale: ptBR });
 };
 
 export const formatDateTime = (date) => {
+	if (!date) return "";
 	return format(new Date(date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", {
 		locale: ptBR,
 	});
+};
+
+export const formatRelativeTime = (date) => {
+	if (!date) return "";
+	const dateObj = new Date(date);
+	const now = new Date();
+
+	const days = differenceInDays(now, dateObj);
+
+	if (days < 10) {
+		if (days > 0) {
+			return `${days} ${days === 1 ? "dia" : "dias"} atrás`;
+		}
+
+		const hours = differenceInHours(now, dateObj);
+		if (hours > 0) {
+			return `${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
+		}
+
+		const minutes = differenceInMinutes(now, dateObj);
+		return `${minutes} ${minutes === 1 ? "minuto" : "minutos"} atrás`;
+	}
+
+	return format(dateObj, "dd/MM/yyyy", { locale: ptBR });
 };
 
 // URL helpers

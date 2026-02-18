@@ -240,7 +240,7 @@ const BlockEditor = ({ value, onChange, preview = false }) => {
 		if (!BlockComponent) return null;
 
 		if (showPreview) {
-			return <BlockComponent data={block.data} preview />;
+			return <BlockComponent key={block.id} data={block.data} preview />;
 		}
 
 		return (

@@ -63,18 +63,18 @@ export const useSubmitComment = () => {
 			// Security validation with rate limiting and sanitization
 			const validatedData = secureValidateComment(commentData);
 
-			// Insert comment with RLS (status will be 'pending' by default due to RLS)
-			const { data: comment, error: insertError } = await supabase
+			// Reverting to direct insert but handling RLS limitations
+			// We cannot use .select() because the read policy only allows 'approved' comments
+			const { error: insertError } = await supabase
 				.from("comments")
 				.insert({
 					post_id: validatedData.post_id,
 					name: validatedData.name,
 					email: validatedData.email,
 					content: validatedData.content,
+					status: "pending",
 					// IP will be added automatically by RLS policy
-				})
-				.select()
-				.single();
+				});
 
 			if (insertError) {
 				console.error("Supabase error:", insertError);
@@ -85,7 +85,7 @@ export const useSubmitComment = () => {
 					insertError.message.includes("row-level security")
 				) {
 					throw new Error(
-						"Não foi possível enviar o comentário. Verifique as permissões da tabela comments no Supabase.",
+						"Não foi possível enviar o comentário. Tente novamente mais tarde.",
 					);
 				}
 
@@ -103,14 +103,41 @@ export const useSubmitComment = () => {
 				throw insertError;
 			}
 
-			// Success - but don't show success message for pending comments
+			// Success
+			// Since we can't read the comment back (RLS), we construct a optimistic comment object
+			// We use a temporary ID timestamp
+			const comment = {
+				id: Date.now(), // Temporary ID
+				post_id: validatedData.post_id,
+				name: validatedData.name,
+				email: validatedData.email,
+				content: validatedData.content,
+				status: "pending",
+				created_at: new Date().toISOString(),
+			};
+
 			toast.success("Comentário enviado para análise!");
 			return comment;
 		} catch (error) {
 			console.error("Error submitting comment:", error);
 
 			// Show the error message from security validation
-			toast.error(error.message);
+			// If it's a known error, show it. Otherwise show generic error in prod.
+			const isDev = import.meta.env.DEV;
+			const isKnownError =
+				error.message.includes("Validação") ||
+				error.message.includes("Limite") ||
+				error.message.includes("obrigatório") ||
+				error.message.includes("inválido") ||
+				error.message.includes("caracteres") ||
+				error.message.includes("recentemente") ||
+				error.message.includes("Não foi possível");
+
+			if (isDev || isKnownError) {
+				toast.error(error.message);
+			} else {
+				toast.error("Erro ao enviar comentário. Tente novamente.");
+			}
 			return false;
 		} finally {
 			setSubmitting(false);

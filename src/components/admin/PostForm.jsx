@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
 	Save,
@@ -30,12 +30,15 @@ import toast from "react-hot-toast";
 const PostForm = () => {
 	const { id } = useParams();
 	const navigate = useNavigate();
+	const location = useLocation();
+	const returnPage = location.state?.returnPage || 1;
 	const isEditing = Boolean(id);
 	const { user } = useAuth();
 
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [tagsInput, setTagsInput] = useState("");
+	const [showSeo, setShowSeo] = useState(false);
 	const [formData, setFormData] = useState({
 		title: "",
 		excerpt: "",
@@ -47,6 +50,9 @@ const PostForm = () => {
 		status: "draft",
 		slug: "",
 		tags: [],
+		meta_title: "",
+		meta_description: "",
+		meta_keywords: "",
 	});
 
 	const [categories] = useState([
@@ -178,8 +184,22 @@ const PostForm = () => {
 		try {
 			setSaving(true);
 
+			// SEO Auto-generation logic if fields are empty
+			const metaTitle =
+				formData.meta_title || formData.title.substring(0, 60);
+			const metaDescription =
+				formData.meta_description || formData.excerpt.substring(0, 160);
+			const metaKeywords =
+				formData.meta_keywords ||
+				(formData.tags && formData.tags.length > 0
+					? formData.tags.join(", ")
+					: formData.category);
+
 			const postData = {
 				...formData,
+				meta_title: metaTitle,
+				meta_description: metaDescription,
+				meta_keywords: metaKeywords,
 				status: publish ? "published" : "draft",
 				date: formData.date || new Date().toISOString(),
 				updated_at: new Date().toISOString(),
@@ -202,21 +222,47 @@ const PostForm = () => {
 			}
 
 			if (result.error) {
-				console.error("Erro do Supabase:", result.error);
-				throw result.error;
+				// Handle duplicate slug error
+				if (
+					result.error.code === "23505" &&
+					result.error.message?.includes("slug")
+				) {
+					// Append timestamp to slug to make it unique and retry
+					const newSlug = `${postData.slug}-${Date.now()}`;
+					toast.success(
+						"Título duplicado detectado. A URL foi ajustada automaticamente.",
+						{ icon: "🔗" },
+					);
+
+					const retryData = { ...postData, slug: newSlug };
+
+					if (isEditing) {
+						result = await supabase
+							.from("posts")
+							.update(retryData)
+							.eq("id", id)
+							.select()
+							.single();
+					} else {
+						result = await supabase
+							.from("posts")
+							.insert(retryData)
+							.select()
+							.single();
+					}
+
+					if (result.error) throw result.error;
+				} else {
+					throw result.error;
+				}
 			}
 
 			toast.success(
-				publish
-					? "Matéria publicada com sucesso!"
-					: "Matéria salva como rascunho!",
+				`Matéria ${id ? "atualizada" : "criada"} com sucesso!`,
 			);
-
-			if (publish) {
-				navigate(`/post/${result.data.slug}`);
-			} else {
-				navigate("/admin/posts");
-			}
+			navigate(`/admin/posts?page=${returnPage}`, {
+				state: { refresh: Date.now() },
+			});
 		} catch (error) {
 			console.error("Error saving post:", error);
 			toast.error(
@@ -252,9 +298,7 @@ const PostForm = () => {
 						<div className="flex justify-between items-center py-4">
 							<div>
 								<h1 className="text-2xl font-bold text-navy">
-									{isEditing
-										? "Editar Matéria"
-										: "Nova Matéria"}
+									{id ? "Editar Matéria" : "Nova Matéria"}
 								</h1>
 								<p className="text-text-secondary">
 									{formData.status === "published"
@@ -265,7 +309,11 @@ const PostForm = () => {
 
 							<div className="flex items-center space-x-2">
 								<button
-									onClick={() => navigate("/admin/posts")}
+									onClick={() =>
+										navigate(
+											`/admin/posts?page=${returnPage}`,
+										)
+									}
 									className="btn-outline flex items-center space-x-2"
 								>
 									<ArrowLeft className="w-4 h-4" />
@@ -471,13 +519,154 @@ const PostForm = () => {
 							/>
 						</div>
 
+						{/* SEO Settings (Optional) */}
+						<div className="bg-white rounded-lg shadow-md p-6">
+							<button
+								onClick={() => setShowSeo(!showSeo)}
+								className="w-full flex items-center justify-between text-lg font-semibold text-navy mb-2 focus:outline-none"
+							>
+								<div className="flex items-center space-x-2">
+									<Globe className="w-5 h-5" />
+									<span>Configurações de SEO (Opcional)</span>
+								</div>
+								{showSeo ? (
+									<ToggleRight className="w-5 h-5 text-teal-primary" />
+								) : (
+									<ToggleLeft className="w-5 h-5 text-gray-400" />
+								)}
+							</button>
+
+							{showSeo && (
+								<div className="space-y-6 mt-6 border-t pt-6 transition-all duration-300">
+									<div>
+										<label className="block text-sm font-medium text-navy mb-2">
+											Meta Título
+										</label>
+										<input
+											type="text"
+											value={formData.meta_title || ""}
+											onChange={(e) =>
+												handleChange(
+													"meta_title",
+													e.target.value,
+												)
+											}
+											placeholder={`Padrão: ${formData.title.substring(0, 60)}`}
+											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+										/>
+										<p className="text-xs text-text-secondary mt-1">
+											Título que aparecerá nos resultados
+											de busca do Google (Ideal: até 60
+											caracteres)
+										</p>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-navy mb-2">
+											Meta Descrição
+										</label>
+										<textarea
+											value={
+												formData.meta_description || ""
+											}
+											onChange={(e) =>
+												handleChange(
+													"meta_description",
+													e.target.value,
+												)
+											}
+											placeholder={`Padrão: ${formData.excerpt.substring(0, 160)}`}
+											rows={2}
+											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent resize-none"
+										/>
+										<p className="text-xs text-text-secondary mt-1">
+											Resumo que aparecerá nos resultados
+											de busca (Ideal: até 160 caracteres)
+										</p>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-navy mb-2">
+											Palavras-chave (Keywords)
+										</label>
+										<input
+											type="text"
+											value={formData.meta_keywords || ""}
+											onChange={(e) =>
+												handleChange(
+													"meta_keywords",
+													e.target.value,
+												)
+											}
+											placeholder={`Padrão: ${formData.tags.join(", ") || formData.category}`}
+											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+										/>
+										<p className="text-xs text-text-secondary mt-1">
+											Separe com vírgulas (Ex: política,
+											eleições, sc)
+										</p>
+									</div>
+								</div>
+							)}
+							{!showSeo && (
+								<p className="text-sm text-text-secondary">
+									Os campos de SEO serão gerados
+									automaticamente com base no título, resumo e
+									tags se deixados em branco.
+								</p>
+							)}
+						</div>
+
 						{/* Options */}
 						<div className="bg-white rounded-lg shadow-md p-6">
 							<h2 className="text-lg font-semibold text-navy mb-6">
 								Opções
 							</h2>
 
-							<div className="space-y-4">
+							<div className="space-y-6">
+								<div>
+									<label className="block text-sm font-medium text-navy mb-2">
+										Data de Publicação
+									</label>
+									<div className="flex items-center gap-2">
+										<input
+											type="datetime-local"
+											value={
+												formData.date
+													? new Date(formData.date)
+															.toISOString()
+															.slice(0, 16)
+													: ""
+											}
+											onChange={(e) =>
+												handleChange(
+													"date",
+													new Date(
+														e.target.value,
+													).toISOString(),
+												)
+											}
+											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent"
+										/>
+										{formData.date && (
+											<button
+												type="button"
+												onClick={() =>
+													handleChange("date", "")
+												}
+												className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
+												title="Limpar data (usar data atual)"
+											>
+												Limpar
+											</button>
+										)}
+									</div>
+									<p className="text-xs text-text-secondary mt-1">
+										Se deixado em branco, será usada a data
+										atual no momento da publicação.
+									</p>
+								</div>
+
 								<div className="flex items-center justify-between">
 									<div>
 										<label className="text-sm font-medium text-navy">

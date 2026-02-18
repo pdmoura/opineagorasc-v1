@@ -25,6 +25,9 @@ import { useAdminComments } from "../../hooks/useComments";
 import { supabase } from "../../lib/supabase";
 import toast from "react-hot-toast";
 
+// Components
+import Pagination from "../../components/admin/Pagination";
+
 const ManageComments = () => {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filterStatus, setFilterStatus] = useState("pending");
@@ -508,55 +511,15 @@ const ManageComments = () => {
 								</div>
 
 								{/* Pagination */}
-								{totalPages > 1 && (
-									<div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
-										<div className="text-sm text-text-secondary">
-											Mostrando {startIndex + 1} a{" "}
-											{Math.min(
-												startIndex + commentsPerPage,
-												filteredComments.length,
-											)}{" "}
-											de {filteredComments.length}{" "}
-											comentários
-										</div>
-										<div className="flex space-x-2">
-											<button
-												onClick={() =>
-													setCurrentPage(
-														Math.max(
-															1,
-															currentPage - 1,
-														),
-													)
-												}
-												disabled={currentPage === 1}
-												className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-											>
-												Anterior
-											</button>
-											<span className="px-3 py-1 text-sm">
-												Página {currentPage} de{" "}
-												{totalPages}
-											</span>
-											<button
-												onClick={() =>
-													setCurrentPage(
-														Math.min(
-															totalPages,
-															currentPage + 1,
-														),
-													)
-												}
-												disabled={
-													currentPage === totalPages
-												}
-												className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-											>
-												Próxima
-											</button>
-										</div>
-									</div>
-								)}
+								<Pagination
+									currentPage={currentPage}
+									totalPages={totalPages}
+									onPageChange={setCurrentPage}
+									totalItems={filteredComments.length}
+									itemsPerPage={commentsPerPage}
+									itemName="comentário"
+									itemNamePlural="comentários"
+								/>
 							</>
 						) : (
 							<div className="text-center py-12">

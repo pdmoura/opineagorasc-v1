@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
 	FileText,
@@ -23,6 +23,7 @@ import { supabase } from "../../lib/supabase";
 
 const AdminDashboard = () => {
 	const { user, signOut } = useAuth();
+	const location = useLocation();
 	const { comments } = useAdminComments();
 	const { stats: viewStats, loading: viewStatsLoading } = useViewStats();
 	const [stats, setStats] = useState({
@@ -91,7 +92,7 @@ const AdminDashboard = () => {
 		if (!viewStatsLoading) {
 			fetchStats();
 		}
-	}, [comments, viewStats, viewStatsLoading]);
+	}, [comments, viewStats, viewStatsLoading, location.key]);
 
 	const statCards = [
 		{

@@ -94,20 +94,21 @@ export const usePost = (slug) => {
 				setLoading(true);
 				setError(null);
 
-				const { data, error } = await supabase
+				// 1. Fetch current post
+				const { data: currentPost, error: postError } = await supabase
 					.from("posts")
 					.select("*")
 					.eq("slug", slug)
 					.eq("status", "published")
 					.single();
 
-				if (error) throw error;
+				if (postError) throw postError;
 
 				// Process post with optimized image
 				const processedPost = {
-					...data,
-					image: data.image
-						? getOptimizedImageUrl(data.image, {
+					...currentPost,
+					image: currentPost.image
+						? getOptimizedImageUrl(currentPost.image, {
 								width: 800,
 								height: 450,
 							})
@@ -115,6 +116,39 @@ export const usePost = (slug) => {
 				};
 
 				setPost(processedPost);
+
+				// 2. Fetch adjacent posts (Next = Older, Previous = Newer in a feed context)
+				// But typically "Previous Post" means Older and "Next Post" means Newer in chronological terms.
+				// However, for a news site, "Next" usually implies "Next in the list", which is Older.
+				// Let's implement:
+				// Next (Older): date < current.date
+				// Previous (Newer): date > current.date
+
+				// Fetch Next (Older)
+				const { data: nextData } = await supabase
+					.from("posts")
+					.select("title, slug, date")
+					.eq("status", "published")
+					.lt("date", currentPost.date)
+					.order("date", { ascending: false })
+					.limit(1)
+					.maybeSingle();
+
+				// Fetch Previous (Newer)
+				const { data: prevData } = await supabase
+					.from("posts")
+					.select("title, slug, date")
+					.eq("status", "published")
+					.gt("date", currentPost.date)
+					.order("date", { ascending: true })
+					.limit(1)
+					.maybeSingle();
+
+				setPost((prev) => ({
+					...prev,
+					nextPost: nextData, // Older post
+					prevPost: prevData, // Newer post
+				}));
 			} catch (error) {
 				console.error("Error fetching post:", error);
 				setError(error.message);

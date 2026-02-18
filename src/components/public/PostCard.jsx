@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { Calendar, User, ArrowRight, MessageSquare, Eye } from "lucide-react";
-import { formatDate, getPostUrl } from "../../lib/utils";
+import { formatDate, formatRelativeTime, getPostUrl } from "../../lib/utils";
 import { useLazyImage } from "../../hooks/useLazyImage";
 
-const PostCard = ({ post, variant = "default" }) => {
+const PostCard = ({ post, variant = "default", hideAuthor = false }) => {
 	const {
 		id,
 		title,
@@ -110,7 +110,7 @@ const PostCard = ({ post, variant = "default" }) => {
 				{/* Meta Information */}
 				<div className="flex items-center justify-between text-xs text-text-secondary">
 					<div className="flex items-center space-x-3">
-						{author && (
+						{author && !hideAuthor && (
 							<div className="flex items-center space-x-1">
 								<User className="w-3 h-3" />
 								<span>{author}</span>
@@ -119,8 +119,14 @@ const PostCard = ({ post, variant = "default" }) => {
 
 						{date && (
 							<div className="flex items-center space-x-1">
-								<Calendar className="w-3 h-3" />
-								<span>{formatDate(date)}</span>
+								<Calendar className="w-3 h-3 text-gray-600" />
+								<span
+									className={`font-medium ${variant === "horizontal" ? "text-gray-900 text-sm" : ""}`}
+								>
+									{variant === "horizontal"
+										? formatRelativeTime(date)
+										: formatDate(date)}
+								</span>
 							</div>
 						)}
 					</div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
 	Plus,
@@ -20,6 +20,10 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+// Components
+import CarouselPreview from "../../components/admin/preview/CarouselPreview";
+import Pagination from "../../components/admin/Pagination";
+
 // Hooks
 import { supabase } from "../../lib/supabase";
 import toast from "react-hot-toast";
@@ -30,8 +34,13 @@ const ManagePosts = () => {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filterStatus, setFilterStatus] = useState("all");
 	const [sortBy, setSortBy] = useState("latest"); // Novo estado para ordenação
-	const [currentPage, setCurrentPage] = useState(1);
+	const [searchParams, setSearchParams] = useSearchParams();
+	const location = useLocation();
+	const [currentPage, setCurrentPage] = useState(
+		parseInt(searchParams.get("page") || "1"),
+	);
 	const [totalPages, setTotalPages] = useState(0);
+	const [totalPosts, setTotalPosts] = useState(0);
 	const [previewPost, setPreviewPost] = useState(null);
 	const [deleteModal, setDeleteModal] = useState({
 		isOpen: false,
@@ -66,7 +75,10 @@ const ManagePosts = () => {
 							</div>
 						);
 
+					// Handle both "image" (legacy/incorrect) and "fullImage" (correct)
 					case "image":
+					case "fullImage":
+						if (!block.data.imageUrl) return null;
 						return (
 							<div key={block.id} className="mb-6">
 								<img
@@ -74,6 +86,11 @@ const ManagePosts = () => {
 									alt={block.data.alt || ""}
 									className="w-full h-auto rounded-lg shadow-md"
 								/>
+								{block.data.caption && (
+									<p className="text-center text-sm text-gray-500 mt-2 italic">
+										{block.data.caption}
+									</p>
+								)}
 							</div>
 						);
 
@@ -109,6 +126,33 @@ const ManagePosts = () => {
 							</div>
 						);
 
+					case "imagemComLink":
+						if (!block.data.imageUrl || !block.data.linkUrl)
+							return null;
+						return (
+							<div key={block.id} className="mb-6">
+								<a
+									href={block.data.linkUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="block group"
+								>
+									<div className="relative overflow-hidden rounded-lg shadow-md group-hover:shadow-lg transition-shadow">
+										<img
+											src={block.data.imageUrl}
+											alt={block.data.alt || ""}
+											className="w-full h-auto object-cover transition-transform group-hover:scale-105"
+										/>
+									</div>
+									{block.data.caption && (
+										<p className="text-sm text-gray-600 mt-2 text-center italic">
+											{block.data.caption}
+										</p>
+									)}
+								</a>
+							</div>
+						);
+
 					case "button":
 						return (
 							<div key={block.id} className="mb-6 text-center">
@@ -128,6 +172,12 @@ const ManagePosts = () => {
 						);
 
 					case "capa":
+						if (
+							!block.data.imageUrl ||
+							block.data.showInBody === false
+						)
+							return null;
+
 						return (
 							<div key={block.id} className="mb-6">
 								<img
@@ -149,69 +199,46 @@ const ManagePosts = () => {
 						if (images.length === 0) return null;
 
 						return (
-							<div key={block.id} className="mb-6">
-								<div className="relative overflow-hidden rounded-lg shadow-md">
-									<div className="relative h-96">
-										{images.map((image, imgIndex) => (
-											<div
-												key={imgIndex}
-												className={`absolute inset-0 transition-opacity duration-500 ${
-													imgIndex === 0
-														? "opacity-100"
-														: "opacity-0"
-												}`}
-											>
-												{image.link ? (
-													<a
-														href={image.link}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="block w-full h-full"
-													>
-														<img
-															src={image.url}
-															alt={
-																image.alt || ""
-															}
-															className="w-full h-full object-cover"
-														/>
-													</a>
-												) : (
-													<img
-														src={image.url}
-														alt={image.alt || ""}
-														className="w-full h-full object-cover"
-													/>
-												)}
-											</div>
-										))}
-									</div>
+							<CarouselPreview key={block.id} images={images} />
+						);
 
-									{/* Indicators */}
-									{images.length > 1 && (
-										<div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-											{images.map((_, imgIndex) => (
-												<div
-													key={imgIndex}
-													className={`w-2 h-2 rounded-full ${
-														imgIndex === 0
-															? "bg-white"
-															: "bg-white bg-opacity-50"
-													}`}
-												/>
-											))}
-										</div>
-									)}
+					case "video":
+						if (!block.data.videoUrl) return null;
+						const videoId = block.data.videoUrl.match(
+							/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+						)?.[1];
+						if (!videoId) return null;
 
-									{/* Caption */}
-									{images[0]?.caption && (
-										<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
-											<p className="text-white text-sm">
-												{images[0].caption}
-											</p>
-										</div>
-									)}
+						return (
+							<div
+								key={block.id}
+								className="mb-6 aspect-video rounded-xl overflow-hidden shadow-lg"
+							>
+								<iframe
+									src={`https://www.youtube.com/embed/${videoId}`}
+									className="w-full h-full"
+									frameBorder="0"
+									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+									allowFullScreen
+								/>
+							</div>
+						);
+
+					case "ad":
+						if (!block.data.code) return null;
+						return (
+							<div
+								key={block.id}
+								className="mb-6 p-4 bg-gray-100 rounded-lg text-center"
+							>
+								<div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">
+									Publicidade
 								</div>
+								<div
+									dangerouslySetInnerHTML={{
+										__html: block.data.code,
+									}}
+								/>
 							</div>
 						);
 
@@ -229,69 +256,104 @@ const ManagePosts = () => {
 
 	const postsPerPage = 10;
 
+	// Sync page with URL
+	useEffect(() => {
+		setSearchParams({ page: currentPage.toString() });
+	}, [currentPage]);
+
+	// Fetch posts
 	useEffect(() => {
 		fetchPosts();
-	}, [searchTerm, filterStatus, currentPage, sortBy]); // Adicionado sortBy
+	}, [
+		searchTerm,
+		filterStatus,
+		currentPage,
+		sortBy,
+		location.key,
+		location.state?.refresh,
+	]); // Adicionado location.state?.refresh para garantir atualização ao voltar do form
 
 	const fetchPosts = async () => {
 		try {
 			setLoading(true);
 
-			// Otimização Extrema: Remover campos não essenciais e contagem exata
-			let query = supabase.from("posts").select(
-				`
+			// 1. Base query for data (with pagination)
+			let dataQuery = supabase.from("posts").select(`
 				id,
 				title,
 				excerpt,
 				category,
 				author,
+				category,
+				author,
 				created_at,
+				date,
 				status
-				`,
-				// Removido { count: "exact" } temporariamente para evitar overhead
-			);
+			`);
 
-			// Apply sorting based on sortBy state
+			// 2. Base query for count (no data, no pagination)
+			let countQuery = supabase
+				.from("posts")
+				.select("id", { count: "exact", head: true });
+
+			// Filter function to apply to both queries
+			const applyFilters = (query) => {
+				if (searchTerm) {
+					query = query.or(
+						`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`,
+					);
+				}
+				if (filterStatus !== "all") {
+					query = query.eq("status", filterStatus);
+				}
+				return query;
+			};
+
+			// Apply filters
+			dataQuery = applyFilters(dataQuery);
+			countQuery = applyFilters(countQuery);
+
+			// Apply sorting (only for data)
 			switch (sortBy) {
 				case "latest":
-					query = query.order("created_at", { ascending: false });
+					dataQuery = dataQuery.order("created_at", {
+						ascending: false,
+					});
 					break;
 				case "oldest":
-					query = query.order("created_at", { ascending: true });
+					dataQuery = dataQuery.order("created_at", {
+						ascending: true,
+					});
 					break;
 				case "title":
-					query = query.order("title", { ascending: true });
+					dataQuery = dataQuery.order("title", { ascending: true });
 					break;
 				case "status":
-					query = query.order("status", { ascending: true });
+					dataQuery = dataQuery.order("status", { ascending: true });
 					break;
 				default:
-					query = query.order("created_at", { ascending: false });
+					dataQuery = dataQuery.order("created_at", {
+						ascending: false,
+					});
 			}
 
-			// Apply search filter
-			if (searchTerm) {
-				query = query.or(
-					`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`,
-				);
-			}
-
-			// Apply status filter
-			if (filterStatus !== "all") {
-				query = query.eq("status", filterStatus);
-			}
-
-			// Apply pagination
+			// Apply pagination (only for data)
 			const from = (currentPage - 1) * postsPerPage;
 			const to = from + postsPerPage - 1;
-			query = query.range(from, to);
+			dataQuery = dataQuery.range(from, to);
 
-			const { data, error, count } = await query;
+			// Execute queries in parallel
+			const [dataRes, countRes] = await Promise.all([
+				dataQuery,
+				countQuery,
+			]);
 
-			if (error) throw error;
+			if (dataRes.error) throw dataRes.error;
+			if (countRes.error) throw countRes.error;
 
-			setPosts(data || []);
-			setTotalPages(Math.ceil((count || 0) / postsPerPage));
+			setPosts(dataRes.data || []);
+			setTotalPosts(countRes.count || 0);
+			setTotalPages(Math.ceil((countRes.count || 0) / postsPerPage));
 		} catch (error) {
 			console.error("Error fetching posts:", error);
 			setError(error.message || "Erro desconhecido");
@@ -360,6 +422,13 @@ const ManagePosts = () => {
 					? `${deleteModal.ids.length} matérias removidas com sucesso!`
 					: "Matéria removida com sucesso!",
 			);
+
+			// Update local state immediately
+			setPosts((prevPosts) =>
+				prevPosts.filter((post) => !deleteModal.ids.includes(post.id)),
+			);
+			setTotalPosts((prev) => Math.max(0, prev - deleteModal.ids.length));
+
 			setDeleteModal({
 				isOpen: false,
 				posts: [],
@@ -367,8 +436,11 @@ const ManagePosts = () => {
 				isBulk: false,
 			});
 			setSelectedPosts(new Set());
-			fetchPosts();
+
+			// Optional: fetch to ensure sync, but UI is already updated
+			// fetchPosts();
 		} catch (error) {
+			console.error("Error deleting posts:", error);
 			toast.error("Erro ao remover matérias");
 		}
 	};
@@ -445,9 +517,9 @@ const ManagePosts = () => {
 									Gerenciar Matérias
 								</h1>
 								<p className="text-text-secondary">
-									{posts.length} matéria
-									{posts.length !== 1 ? "s" : ""} encontrada
-									{posts.length !== 1 ? "s" : ""}
+									{totalPosts} matéria
+									{totalPosts !== 1 ? "s" : ""} encontrada
+									{totalPosts !== 1 ? "s" : ""}
 								</p>
 							</div>
 							<div className="flex items-center space-x-4">
@@ -556,11 +628,13 @@ const ManagePosts = () => {
 					</div>
 
 					{/* Posts Table */}
-					<div className="bg-white rounded-lg shadow-md overflow-hidden">
+					<div
+						className={`bg-white rounded-lg shadow-md overflow-hidden transition-opacity duration-300 ${loading ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+					>
 						{posts.length > 0 ? (
 							<>
 								<div className="overflow-x-auto">
-									<table className="w-full">
+									<table className="min-w-full divide-y divide-gray-200">
 										<thead className="bg-gray-50">
 											<tr>
 												<th className="px-6 py-3 text-left">
@@ -652,7 +726,8 @@ const ManagePosts = () => {
 														<div className="text-sm text-text-primary">
 															{format(
 																new Date(
-																	post.created_at,
+																	post.date ||
+																		post.created_at,
 																),
 																"dd/MM/yyyy",
 																{
@@ -751,6 +826,10 @@ const ManagePosts = () => {
 															{/* Edit */}
 															<Link
 																to={`/admin/posts/edit/${post.id}`}
+																state={{
+																	returnPage:
+																		currentPage,
+																}}
 																className="p-2 rounded hover:bg-gray-100 transition-colors"
 																title="Editar"
 															>
@@ -765,57 +844,15 @@ const ManagePosts = () => {
 								</div>
 
 								{/* Pagination */}
-								{totalPages > 1 && (
-									<div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
-										<div className="text-sm text-text-secondary">
-											Mostrando{" "}
-											{(currentPage - 1) * postsPerPage +
-												1}{" "}
-											a{" "}
-											{Math.min(
-												currentPage * postsPerPage,
-												posts.length,
-											)}{" "}
-											de {posts.length} matérias
-										</div>
-										<div className="flex space-x-2">
-											<button
-												onClick={() =>
-													setCurrentPage(
-														Math.max(
-															1,
-															currentPage - 1,
-														),
-													)
-												}
-												disabled={currentPage === 1}
-												className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-											>
-												Anterior
-											</button>
-											<span className="px-3 py-1 text-sm">
-												Página {currentPage} de{" "}
-												{totalPages}
-											</span>
-											<button
-												onClick={() =>
-													setCurrentPage(
-														Math.min(
-															totalPages,
-															currentPage + 1,
-														),
-													)
-												}
-												disabled={
-													currentPage === totalPages
-												}
-												className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-											>
-												Próxima
-											</button>
-										</div>
-									</div>
-								)}
+								<Pagination
+									currentPage={currentPage}
+									totalPages={totalPages}
+									onPageChange={setCurrentPage}
+									totalItems={totalPosts}
+									itemsPerPage={postsPerPage}
+									itemName="matéria"
+									itemNamePlural="matérias"
+								/>
 							</>
 						) : (
 							<div className="text-center py-12">

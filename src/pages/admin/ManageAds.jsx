@@ -23,6 +23,9 @@ import { ptBR } from "date-fns/locale";
 import { supabase } from "../../lib/supabase";
 import toast from "react-hot-toast";
 
+// Components
+import Pagination from "../../components/admin/Pagination";
+
 const ManageAds = () => {
 	const [ads, setAds] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -652,40 +655,15 @@ const ManageAds = () => {
 								</div>
 
 								{/* Pagination */}
-								{totalPages > 1 && (
-									<div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
-										<div className="text-sm text-text-secondary">
-											Mostrando{" "}
-											{(currentPage - 1) * adsPerPage + 1}{" "}
-											a{" "}
-											{Math.min(
-												currentPage * adsPerPage,
-												filteredAds.length,
-											)}{" "}
-											de {filteredAds.length} anúncios
-										</div>
-										<div className="flex space-x-2">
-											{Array.from(
-												{ length: totalPages },
-												(_, i) => i + 1,
-											).map((page) => (
-												<button
-													key={page}
-													onClick={() =>
-														handlePageChange(page)
-													}
-													className={`px-3 py-1 text-sm border rounded-md ${
-														currentPage === page
-															? "bg-teal-primary text-white border-teal-primary"
-															: "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-													} transition-colors`}
-												>
-													{page}
-												</button>
-											))}
-										</div>
-									</div>
-								)}
+								<Pagination
+									currentPage={currentPage}
+									totalPages={totalPages}
+									onPageChange={handlePageChange}
+									totalItems={filteredAds.length}
+									itemsPerPage={adsPerPage}
+									itemName="anúncio"
+									itemNamePlural="anúncios"
+								/>
 							</>
 						) : (
 							<div className="text-center py-12">
@@ -709,29 +687,7 @@ const ManageAds = () => {
 						)}
 					</div>
 
-					{/* Pagination */}
-					{totalPages > 1 && (
-						<div className="mt-6 flex justify-center">
-							<div className="flex items-center space-x-2">
-								{Array.from(
-									{ length: totalPages },
-									(_, i) => i + 1,
-								).map((page) => (
-									<button
-										key={page}
-										onClick={() => handlePageChange(page)}
-										className={`px-3 py-2 rounded-lg ${
-											currentPage === page
-												? "bg-teal-primary text-white"
-												: "bg-white text-gray-700 hover:bg-gray-100"
-										} transition-colors`}
-									>
-										{page}
-									</button>
-								))}
-							</div>
-						</div>
-					)}
+					{/* Bottom Pagination removed as it's now integrated in table footer */}
 				</div>
 			</div>
 		</>

@@ -41,13 +41,15 @@ const Home = () => {
 	const [submitting, setSubmitting] = useState(false);
 	const [ads, setAds] = useState([]);
 	const [bannerAds, setBannerAds] = useState([]);
+	const [sidebarAds, setSidebarAds] = useState([]);
 	const [adsLoading, setAdsLoading] = useState(true);
+	const [limit, setLimit] = useState(8);
 	const { addNewsletter } = useNewsletters();
 	const {
 		posts,
 		loading: postsLoading,
 		error: postsError,
-	} = usePosts(null, 6);
+	} = usePosts(null, limit);
 	const {
 		posts: featuredPosts,
 		loading: featuredLoading,
@@ -85,6 +87,18 @@ const Home = () => {
 
 				if (bannerError) throw bannerError;
 				setBannerAds(bannerData || []);
+
+				// Fetch Sidebar Ads
+				const { data: sidebarData, error: sidebarError } =
+					await supabase
+						.from("ads")
+						.select("*")
+						.eq("status", "approved")
+						.eq("category", "sidebar")
+						.order("created_at", { ascending: false });
+
+				if (sidebarError) throw sidebarError;
+				setSidebarAds(sidebarData || []);
 			} catch (error) {
 				console.error("Error fetching ads:", error);
 			} finally {
@@ -121,7 +135,12 @@ const Home = () => {
 		}
 	};
 
-	if (postsLoading || featuredLoading || adsLoading || popularLoading) {
+	if (
+		(postsLoading && posts.length === 0) ||
+		featuredLoading ||
+		adsLoading ||
+		popularLoading
+	) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="text-center">
@@ -177,7 +196,7 @@ const Home = () => {
 					name="geo.placename"
 					content="Concórdia, Santa Catarina"
 				/>
-				<link rel="canonical" href="https://opineagorasc.com.br" />
+				<link rel="canonical" href="https://opineagorasc.vercel.app" />
 
 				{/* Open Graph */}
 				<meta property="og:type" content="website" />
@@ -189,11 +208,14 @@ const Home = () => {
 					property="og:description"
 					content="Leia as últimas notícias de Santa Catarina no Opine Agora SC. Política, economia, sociedade, esportes, cultura e mais. Jornalismo local com credibilidade e transparência."
 				/>
-				<meta property="og:url" content="https://opineagorasc.com.br" />
+				<meta
+					property="og:url"
+					content="https://opineagorasc.vercel.app"
+				/>
 				<meta property="og:site_name" content="Opine Agora SC" />
 				<meta
 					property="og:image"
-					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
+					content="https://opineagorasc.vercel.app/ogimage-opineagorasc.png"
 				/>
 				<meta property="og:image:width" content="1200" />
 				<meta property="og:image:height" content="630" />
@@ -211,7 +233,7 @@ const Home = () => {
 				/>
 				<meta
 					name="twitter:image"
-					content="https://opineagorasc.com.br/ogimage-opineagorasc.png"
+					content="https://opineagorasc.vercel.app/ogimage-opineagorasc.png"
 				/>
 
 				{/* Schema.org Structured Data */}
@@ -400,14 +422,36 @@ const Home = () => {
 							</div>
 
 							<div className="space-y-4">
-								{posts?.slice(4, 8).map((post) => (
+								{posts?.slice(4).map((post) => (
 									<PostCard
 										key={post.id}
 										post={post}
 										variant="horizontal"
+										hideAuthor={true}
 									/>
 								))}
 							</div>
+
+							{posts && posts.length >= limit && (
+								<div className="mt-8 text-center pt-8 border-t border-gray-100">
+									<button
+										onClick={() =>
+											setLimit((prev) => prev + 4)
+										}
+										disabled={postsLoading}
+										className="btn-primary w-full sm:w-auto min-w-[200px]"
+									>
+										{postsLoading ? (
+											<span className="flex items-center justify-center space-x-2">
+												<div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+												<span>Carregando...</span>
+											</span>
+										) : (
+											"Carregar Mais"
+										)}
+									</button>
+								</div>
+							)}
 						</section>
 					</div>
 
@@ -427,7 +471,7 @@ const Home = () => {
 											to={`/post/${post.slug || post.id}`}
 											className="flex items-start space-x-3 group"
 										>
-											<span className="text-2xl font-bold text-orange-warm flex-shrink-0">
+											<span className="text-3xl font-bold text-orange-700 flex-shrink-0">
 												{String(index + 1).padStart(
 													2,
 													"0",
@@ -437,22 +481,6 @@ const Home = () => {
 												<h4 className="font-semibold text-sm group-hover:text-teal-primary transition-colors line-clamp-2">
 													{post.title}
 												</h4>
-												<div className="flex items-center space-x-2 mt-1">
-													<p className="text-xs text-text-secondary">
-														{formatDate(post.date)}
-													</p>
-													{post.view_count !==
-														undefined &&
-														post.view_count !==
-															null && (
-															<div className="flex items-center space-x-1">
-																<Eye className="w-3 h-3 text-text-secondary" />
-																<span className="text-xs text-text-secondary">
-																	{post.view_count.toLocaleString()}
-																</span>
-															</div>
-														)}
-												</div>
 											</div>
 										</Link>
 									))}
@@ -506,6 +534,49 @@ const Home = () => {
 								</p>
 							</div>
 						</div>
+
+						{/* Sidebar Ads */}
+						{sidebarAds.length > 0 && (
+							<div className="space-y-6">
+								{sidebarAds.map((ad) => (
+									<div
+										key={ad.id}
+										className="bg-white rounded-lg shadow-md overflow-hidden"
+									>
+										{ad.image_url ? (
+											<a
+												href={ad.link_url}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="block"
+											>
+												<img
+													src={ad.image_url}
+													alt={ad.title}
+													className="w-full h-auto object-cover"
+												/>
+											</a>
+										) : (
+											<div className="p-4 text-center bg-gray-100">
+												<p className="text-gray-500">
+													{ad.title}
+												</p>
+												{ad.link_url && (
+													<a
+														href={ad.link_url}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-teal-primary text-sm mt-2 block"
+													>
+														Saiba mais
+													</a>
+												)}
+											</div>
+										)}
+									</div>
+								))}
+							</div>
+						)}
 					</aside>
 				</div>
 			</div>
