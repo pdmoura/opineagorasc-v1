@@ -29,6 +29,7 @@ export const usePosts = (category = null, limit = null) => {
 						image, 
 						featured,
 						view_count,
+						updated_at,
 						status
 					`,
 					)
@@ -245,6 +246,7 @@ export const useFeaturedPosts = (limit = 5) => {
 						image, 
 						featured,
 						view_count,
+						updated_at,
 						status
 					`,
 					)

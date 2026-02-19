@@ -24,6 +24,7 @@ import Search from "./pages/Search";
 import PoliticaTermos from "./pages/PoliticaTermos";
 import Login from "./pages/Login";
 import AllAds from "./pages/AllAds";
+import UrgentNews from "./pages/UrgentNews";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManagePosts from "./pages/admin/ManagePosts";
 import ManageAds from "./pages/admin/ManageAds";
@@ -86,7 +87,7 @@ function App() {
 					content="Concórdia, Santa Catarina"
 				/>
 				<meta name="ICBM" content="-27.2344,-52.2752" />
-				<link rel="canonical" href="https://opineagorasc.vercel.app" />
+				<link rel="canonical" href="https://www.opineagorasc.com.br" />
 
 				{/* AI and Crawler Friendly */}
 				<meta name="referrer" content="no-referrer-when-downgrade" />
@@ -125,12 +126,12 @@ function App() {
 				/>
 				<meta
 					property="og:url"
-					content="https://opineagorasc.vercel.app"
+					content="https://www.opineagorasc.com.br"
 				/>
 				<meta property="og:site_name" content="Opine Agora SC" />
 				<meta
 					property="og:image"
-					content="https://opineagorasc.vercel.app/ogimage-opineagorasc.png"
+					content="https://www.opineagorasc.com.br/opineagorasc-ogimage.png"
 				/>
 				<meta property="og:image:width" content="1200" />
 				<meta property="og:image:height" content="630" />
@@ -152,7 +153,7 @@ function App() {
 				/>
 				<meta
 					name="twitter:image"
-					content="https://opineagorasc.vercel.app/ogimage-opineagorasc.png"
+					content="https://www.opineagorasc.com.br/opineagorasc-ogimage.png"
 				/>
 				<meta
 					name="twitter:image:alt"
@@ -166,10 +167,10 @@ function App() {
 						"@type": "NewsMediaOrganization",
 						name: "Opine Agora SC",
 						alternateName: "Opine Agora",
-						url: "https://opineagorasc.vercel.app",
+						url: "https://www.opineagorasc.com.br",
 						logo: {
 							"@type": "ImageObject",
-							url: "https://opineagorasc.vercel.app/ogimage-opineagorasc.png",
+							url: "https://www.opineagorasc.com.br/opineagorasc-ogimage.png",
 							width: 1200,
 							height: 630,
 						},
@@ -315,6 +316,10 @@ function App() {
 									<Route
 										path="/anuncios"
 										element={<AllAds />}
+									/>
+									<Route
+										path="/urgentes"
+										element={<UrgentNews />}
 									/>
 									{/* Fallback */}
 									<Route path="*" element={<Home />} />

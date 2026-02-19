@@ -35,6 +35,23 @@ import { usePopularPosts } from "../hooks/usePostViews";
 import { formatDate } from "../lib/utils";
 import { supabase } from "../lib/supabase";
 import { useNewsletters } from "../hooks/useNewsletters";
+import UrgentTicker from "../components/public/UrgentTicker";
+
+// Swiper Constants to prevent re-renders
+const ADS_BREAKPOINTS = {
+	640: {
+		slidesPerView: 2,
+	},
+	1024: {
+		slidesPerView: 3,
+	},
+};
+const ADS_AUTOPLAY = {
+	delay: 5000,
+	disableOnInteraction: false,
+};
+const ADS_PAGINATION = { clickable: true };
+const ADS_MODULES = [Autoplay, Pagination, Navigation];
 
 const Home = () => {
 	const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -54,7 +71,7 @@ const Home = () => {
 		posts: featuredPosts,
 		loading: featuredLoading,
 		error: featuredError,
-	} = useFeaturedPosts(3);
+	} = useFeaturedPosts(5);
 	const {
 		posts: popularPosts,
 		loading: popularLoading,
@@ -222,7 +239,7 @@ const Home = () => {
 					name="geo.placename"
 					content="Concórdia, Santa Catarina"
 				/>
-				<link rel="canonical" href="https://opineagorasc.vercel.app" />
+				<link rel="canonical" href="https://www.opineagorasc.com.br" />
 
 				{/* Open Graph */}
 				<meta property="og:type" content="website" />
@@ -236,12 +253,12 @@ const Home = () => {
 				/>
 				<meta
 					property="og:url"
-					content="https://opineagorasc.vercel.app"
+					content="https://www.opineagorasc.com.br"
 				/>
 				<meta property="og:site_name" content="Opine Agora SC" />
 				<meta
 					property="og:image"
-					content="https://opineagorasc.vercel.app/ogimage-opineagorasc.png"
+					content="https://www.opineagorasc.com.br/opineagorasc-ogimage.png"
 				/>
 				<meta property="og:image:width" content="1200" />
 				<meta property="og:image:height" content="630" />
@@ -259,7 +276,7 @@ const Home = () => {
 				/>
 				<meta
 					name="twitter:image"
-					content="https://opineagorasc.vercel.app/ogimage-opineagorasc.png"
+					content="https://www.opineagorasc.com.br/opineagorasc-ogimage.png"
 				/>
 
 				{/* Schema.org Structured Data */}
@@ -292,7 +309,7 @@ const Home = () => {
 
 			{/* Top Banner Ad Section */}
 			{bannerAds.length > 0 && (
-				<div className="bg-gray-100 border-b border-gray-200 w-full">
+				<div className="w-full mt-0 relative z-0">
 					<div className="w-full">
 						<Swiper
 							modules={[Autoplay]}
@@ -306,32 +323,56 @@ const Home = () => {
 							}}
 							className="w-full"
 						>
-							{bannerAds.map((ad) => (
-								<SwiperSlide key={ad.id}>
-									<div className="w-full flex justify-center">
-										{ad.link_url ? (
-											<a
-												href={ad.link_url}
-												target="_blank"
-												rel="noopener noreferrer"
-												className="block w-full"
+							{bannerAds.map((ad) => {
+								let fullWidth = true;
+								try {
+									// Try to parse configuration from content field
+									if (
+										ad.content &&
+										ad.content.startsWith("{")
+									) {
+										const config = JSON.parse(ad.content);
+										if (config.fullWidth !== undefined) {
+											fullWidth = config.fullWidth;
+										}
+									}
+								} catch (e) {
+									// Ignore parse errors, default to full width
+								}
+
+								return (
+									<SwiperSlide key={ad.id}>
+										<div
+											className={`w-full flex justify-center ${!fullWidth ? "bg-navy py-12" : ""}`}
+										>
+											<div
+												className={`${fullWidth ? "w-full" : "w-full max-w-7xl px-4 sm:px-6 lg:px-8"}`}
 											>
-												<img
-													src={ad.image_url}
-													alt={ad.title}
-													className="w-full h-auto object-cover"
-												/>
-											</a>
-										) : (
-											<img
-												src={ad.image_url}
-												alt={ad.title}
-												className="w-full h-auto object-cover"
-											/>
-										)}
-									</div>
-								</SwiperSlide>
-							))}
+												{ad.image_url ? (
+													<a
+														href={ad.link_url}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="block w-full"
+													>
+														<img
+															src={ad.image_url}
+															alt={ad.title}
+															className={`w-full h-auto object-contain ${!fullWidth ? "rounded-lg shadow-2xl" : ""}`}
+														/>
+													</a>
+												) : (
+													<img
+														src={ad.image_url}
+														alt={ad.title}
+														className={`w-full h-auto object-contain ${!fullWidth ? "rounded-lg shadow-2xl" : ""}`}
+													/>
+												)}
+											</div>
+										</div>
+									</SwiperSlide>
+								);
+							})}
 						</Swiper>
 					</div>
 				</div>
@@ -354,8 +395,8 @@ const Home = () => {
 					>
 						{/* Slide 1: Welcome Message */}
 						<SwiperSlide>
-							<div className="flex flex-col items-center justify-center text-center h-full min-h-[350px] lg:min-h-[450px] px-4">
-								<h1 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-tight max-w-4xl">
+							<div className="flex flex-col items-center justify-center text-center h-full min-h-[350px] lg:min-h-[400px] px-4">
+								<h1 className="text-3xl md:text-5xl font-bold mb-2 md:mb-3 leading-tight max-w-4xl">
 									Informação com
 									<span className="text-orange-warm">
 										{" "}
@@ -384,7 +425,7 @@ const Home = () => {
 						{!featuredLoading &&
 							featuredPosts?.map((post) => (
 								<SwiperSlide key={post.id}>
-									<div className="flex items-center justify-center h-full min-h-[350px] lg:min-h-[450px] px-4">
+									<div className="flex items-center justify-center h-full min-h-[350px] lg:min-h-[400px] px-4">
 										<div className="w-full max-w-6xl">
 											<div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl border border-white/20">
 												<div className="grid grid-cols-1 md:grid-cols-2">
@@ -452,7 +493,7 @@ const Home = () => {
 							</div>
 
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-								{postsLoading ? (
+								{postsLoading && posts.length === 0 ? (
 									<>
 										<SkeletonLoader type="card" />
 										<SkeletonLoader type="card" />
@@ -486,16 +527,18 @@ const Home = () => {
 
 							<div className="space-y-4">
 								{posts?.slice(4).map((post) => (
-									<PostCard
-										key={post.id}
-										post={post}
-										variant="horizontal"
-										hideAuthor={true}
-									/>
+									<div key={post.id} className="fade-in">
+										<PostCard
+											post={post}
+											variant="horizontal"
+											hideAuthor={true}
+										/>
+									</div>
 								))}
 							</div>
 
-							{posts && posts.length >= limit && (
+							{(postsLoading ||
+								(posts && posts.length >= limit)) && (
 								<div className="mt-8 text-center pt-8 border-t border-gray-100">
 									<button
 										onClick={() =>
@@ -667,24 +710,14 @@ const Home = () => {
 					</div>
 
 					<Swiper
-						modules={[Autoplay, Pagination, Navigation]}
+						modules={ADS_MODULES}
 						spaceBetween={24}
 						slidesPerView={1}
 						navigation
-						pagination={{ clickable: true }}
-						autoplay={{
-							delay: 5000,
-							disableOnInteraction: false,
-						}}
+						pagination={ADS_PAGINATION}
+						autoplay={ADS_AUTOPLAY}
 						loop={true}
-						breakpoints={{
-							640: {
-								slidesPerView: 2,
-							},
-							1024: {
-								slidesPerView: 3,
-							},
-						}}
+						breakpoints={ADS_BREAKPOINTS}
 						className="pb-12" // Padding bottom for pagination bullets
 					>
 						{ads.map((ad) => (

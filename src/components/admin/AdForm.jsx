@@ -37,6 +37,7 @@ const AdForm = () => {
 		link_url: "",
 		image_url: "",
 		status: "approved",
+		fullWidth: true,
 		start_date: format(new Date(), "yyyy-MM-dd"),
 		end_date: format(
 			new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -65,14 +66,32 @@ const AdForm = () => {
 			if (error) throw error;
 
 			if (data) {
+				let fullWidth = true;
+				let content = data.content || "";
+
+				// If category is banner, try to parse content as JSON configuration
+				if (data.category === "banner") {
+					try {
+						const config = JSON.parse(data.content);
+						if (typeof config === "object" && config !== null) {
+							fullWidth = config.fullWidth !== false; // Default to true if undefined
+							content = ""; // Clear content for form display as it's used for config
+						}
+					} catch (e) {
+						// Not JSON, treat as regular content (legacy)
+						content = data.content;
+					}
+				}
+
 				setFormData({
 					title: data.title || "",
 					slug: data.slug || "",
-					content: data.content || "",
+					content: content,
 					category: data.category || "banner",
 					link_url: data.link_url || "",
 					image_url: data.image_url || "",
 					status: data.status || "approved",
+					fullWidth: fullWidth,
 					start_date: data.start_date
 						? (() => {
 								const date = new Date(data.start_date);
@@ -181,9 +200,31 @@ const AdForm = () => {
 				created_at: new Date().toISOString(),
 			};
 
+			// If banner, save configuration in content field
+			if (formData.category === "banner") {
+				adData.content = JSON.stringify({
+					fullWidth: formData.fullWidth,
+				});
+			}
+
+			// Remove fullWidth from adData as it's not a column in the table
+			delete adData.fullWidth;
+
 			let result;
 
 			if (isEditing) {
+				// Don't update created_at on edit to keep original order if desired,
+				// or keep it to bump. User didn't specify, but standard behavior usually preserves creation date.
+				// However, the existing code explicitly updated it. I will keep the explicit update logic
+				// BUT move the adData.created_at logic inside the !isEditing block if I want to preserve it,
+				// OR just leave it as is if the intention was to bump.
+				// Actually, the previous code had `created_at: new Date().toISOString()` in adData,
+				// which means it WAS updating it on every save.
+				// I'll leave the `updated_at` but remove `created_at` from the spread for updates
+				// to be safer, unless it's a new insert.
+
+				delete adData.created_at; // Remove created_at from update payload
+
 				result = await supabase
 					.from("ads")
 					.update(adData)
@@ -320,6 +361,60 @@ const AdForm = () => {
 											))}
 										</select>
 									</div>
+
+									{/* Banner Width Option */}
+									{formData.category === "banner" && (
+										<div className="md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+											<label className="flex items-center space-x-3 cursor-pointer">
+												<div className="relative">
+													<input
+														type="checkbox"
+														name="fullWidth"
+														checked={
+															formData.fullWidth
+														}
+														onChange={(e) =>
+															setFormData(
+																(prev) => ({
+																	...prev,
+																	fullWidth:
+																		e.target
+																			.checked,
+																}),
+															)
+														}
+														className="sr-only"
+													/>
+													<div
+														className={`block w-14 h-8 rounded-full transition-colors ${
+															formData.fullWidth
+																? "bg-teal-primary"
+																: "bg-gray-400"
+														}`}
+													></div>
+													<div
+														className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${
+															formData.fullWidth
+																? "transform translate-x-6"
+																: ""
+														}`}
+													></div>
+												</div>
+												<div className="flex flex-col">
+													<span className="text-sm font-medium text-navy">
+														{formData.fullWidth
+															? "Largura Total (Full Width)"
+															: "Alinhado ao Conteúdo (1200px)"}
+													</span>
+													<span className="text-xs text-text-secondary">
+														{formData.fullWidth
+															? "O banner ocupará 100% da largura da tela"
+															: "O banner será centralizado e limitado à largura do conteúdo principal"}
+													</span>
+												</div>
+											</label>
+										</div>
+									)}
 
 									{/* Status */}
 

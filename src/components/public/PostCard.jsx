@@ -36,9 +36,10 @@ const PostCard = ({ post, variant = "default", hideAuthor = false }) => {
 	};
 
 	const cardClasses = {
-		default: "card card-hover",
+		default: "card card-hover h-full flex flex-col",
 		horizontal: "card card-hover flex flex-row",
-		featured: "card card-hover border-2 border-teal-primary",
+		featured:
+			"card card-hover border-2 border-teal-primary h-full flex flex-col",
 	};
 
 	const imageClasses = {
@@ -48,9 +49,9 @@ const PostCard = ({ post, variant = "default", hideAuthor = false }) => {
 	};
 
 	const contentClasses = {
-		default: "p-6",
+		default: "p-6 flex-1 flex flex-col",
 		horizontal: "p-4 flex-1",
-		featured: "p-6",
+		featured: "p-6 flex-1 flex flex-col",
 	};
 
 	return (
@@ -83,7 +84,7 @@ const PostCard = ({ post, variant = "default", hideAuthor = false }) => {
 				{category && (
 					<Link
 						to={`/categoria/${encodeURIComponent(category.toLowerCase())}`}
-						className="inline-block px-3 py-1 bg-navy text-white text-xs font-semibold rounded-full mb-3 hover:bg-teal-600 transition-colors"
+						className="inline-block self-start px-3 py-1 bg-navy text-white text-xs font-semibold rounded-full mb-3 hover:bg-teal-600 transition-colors"
 					>
 						{category}
 					</Link>
@@ -116,22 +117,27 @@ const PostCard = ({ post, variant = "default", hideAuthor = false }) => {
 								<span>{author}</span>
 							</div>
 						)}
+					</div>
 
+					<div className="flex items-center space-x-3">
 						{date && (
 							<div className="flex items-center space-x-1">
 								<Calendar className="w-3 h-3 text-gray-600" />
 								<span
 									className={`font-medium ${variant === "horizontal" ? "text-gray-900 text-sm" : ""}`}
+									title={
+										post.updated_at
+											? `Atualizado em: ${formatDate(post.updated_at, "dd/MM/yyyy HH:mm")}`
+											: `Publicado em: ${formatDate(date, "dd/MM/yyyy HH:mm")}`
+									}
 								>
-									{variant === "horizontal"
-										? formatRelativeTime(date)
-										: formatDate(date)}
+									{formatRelativeTime(
+										post.updated_at || date,
+									)}
 								</span>
 							</div>
 						)}
-					</div>
 
-					<div className="flex items-center space-x-2">
 						{view_count !== undefined && view_count !== null && (
 							<div className="flex items-center space-x-1">
 								<Eye className="w-3 h-3" />

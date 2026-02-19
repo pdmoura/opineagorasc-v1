@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Image, AlignLeft, AlignRight } from "lucide-react";
 import ImageUploadDirect from "../ImageUploadDirect";
+import RichTextEditor from "../RichTextEditor";
+import ReactMarkdown from "react-markdown";
 
 const ImageTextBlock = ({ data, onChange, preview = false }) => {
 	const handleChange = (field, value) => {
@@ -13,25 +15,25 @@ const ImageTextBlock = ({ data, onChange, preview = false }) => {
 		if (!data.imageUrl && !data.text) return null;
 
 		return (
-			<div
-				className={`my-8 flex flex-col ${
-					data.align === "right"
-						? "md:flex-row-reverse"
-						: "md:flex-row"
-				} items-center gap-8`}
-			>
+			<div className="my-8 clearfix">
 				{data.imageUrl && (
-					<img
-						src={data.imageUrl}
-						alt={data.alt || ""}
-						className="w-full md:w-1/3 rounded-lg shadow-md"
-					/>
+					<div
+						className={`relative w-full md:w-1/3 mb-4 ${
+							data.align === "right"
+								? "md:float-right md:ml-6"
+								: "md:float-left md:mr-6"
+						}`}
+					>
+						<img
+							src={data.imageUrl}
+							alt={data.alt || ""}
+							className="w-full rounded-lg shadow-md"
+						/>
+					</div>
 				)}
 				{data.text && (
-					<div className="flex-1">
-						<p className="text-lg leading-relaxed whitespace-pre-line">
-							{data.text}
-						</p>
+					<div className="text-lg leading-relaxed prose max-w-none">
+						<ReactMarkdown>{data.text}</ReactMarkdown>
 					</div>
 				)}
 			</div>
@@ -101,12 +103,10 @@ const ImageTextBlock = ({ data, onChange, preview = false }) => {
 				<label className="block text-sm font-medium text-navy mb-2">
 					Texto
 				</label>
-				<textarea
-					value={data.text || ""}
-					onChange={(e) => handleChange("text", e.target.value)}
+				<RichTextEditor
+					content={data.text || ""}
+					onChange={(value) => handleChange("text", value)}
 					placeholder="Digite o texto que acompanhará a imagem..."
-					rows={6}
-					className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary focus:border-transparent resize-none"
 				/>
 			</div>
 

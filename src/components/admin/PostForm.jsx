@@ -37,6 +37,8 @@ const PostForm = () => {
 
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [lastSaved, setLastSaved] = useState(null);
+	const [isDirty, setIsDirty] = useState(false);
 	const [tagsInput, setTagsInput] = useState("");
 	const [showSeo, setShowSeo] = useState(false);
 	const [formData, setFormData] = useState({
@@ -47,6 +49,7 @@ const PostForm = () => {
 		author: "",
 		image: "",
 		featured: false,
+		urgent: false,
 		status: "draft",
 		slug: "",
 		tags: [],
@@ -61,7 +64,7 @@ const PostForm = () => {
 		"Sociedade",
 		"Esportes",
 		"Cultura",
-		"Opinião",
+		"MPSC",
 		"Tecnologia",
 		"Saúde",
 		"Educação",
@@ -72,6 +75,41 @@ const PostForm = () => {
 			fetchPost();
 		}
 	}, [id]);
+
+	// Auto-save effect
+	useEffect(() => {
+		// Only auto-save if:
+		// 1. Form is dirty (has changes)
+		// 2. Not currently saving
+		// 3. Status is 'draft' (don't auto-save published posts to avoid live updates)
+		// 4. We have at least a title (minimal requirement to save)
+		if (
+			isDirty &&
+			!saving &&
+			formData.status === "draft" &&
+			formData.title
+		) {
+			const timeoutId = setTimeout(() => {
+				handleSave(false, true); // isPublish=false, isAutoSave=true
+			}, 30000); // 30 seconds debounce
+
+			return () => clearTimeout(timeoutId);
+		}
+	}, [formData, isDirty, saving]);
+
+	// Warn before leaving if dirty
+	useEffect(() => {
+		const handleBeforeUnload = (e) => {
+			if (isDirty) {
+				e.preventDefault();
+				e.returnValue = "";
+			}
+		};
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () =>
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+	}, [isDirty]);
 
 	const fetchPost = async () => {
 		try {
@@ -103,6 +141,7 @@ const PostForm = () => {
 				tags: data.tags || [],
 			});
 			setTagsInput((data.tags || []).join(", "));
+			setLastSaved(new Date(data.updated_at));
 		} catch (error) {
 			console.error("Error fetching post:", error);
 			toast.error("Erro ao carregar matéria");
@@ -116,6 +155,7 @@ const PostForm = () => {
 			...prev,
 			[field]: value,
 		}));
+		setIsDirty(true);
 
 		// Auto-generate slug when title changes
 		if (field === "title" && !isEditing) {
@@ -171,13 +211,17 @@ const PostForm = () => {
 		return true;
 	};
 
-	const handleSave = async (publish = false) => {
+	const handleSave = async (publish = false, isAutoSave = false) => {
 		if (!validateForm()) return;
 
 		// Verificar se usuário está autenticado
 		if (!user) {
-			toast.error("Você precisa estar autenticado para salvar matérias");
-			navigate("/login");
+			if (!isAutoSave) {
+				toast.error(
+					"Você precisa estar autenticado para salvar matérias",
+				);
+				navigate("/login");
+			}
 			return;
 		}
 
@@ -229,10 +273,12 @@ const PostForm = () => {
 				) {
 					// Append timestamp to slug to make it unique and retry
 					const newSlug = `${postData.slug}-${Date.now()}`;
-					toast.success(
-						"Título duplicado detectado. A URL foi ajustada automaticamente.",
-						{ icon: "🔗" },
-					);
+					if (!isAutoSave) {
+						toast.success(
+							"Título duplicado detectado. A URL foi ajustada automaticamente.",
+							{ icon: "🔗" },
+						);
+					}
 
 					const retryData = { ...postData, slug: newSlug };
 
@@ -257,18 +303,44 @@ const PostForm = () => {
 				}
 			}
 
-			toast.success(
-				`Matéria ${id ? "atualizada" : "criada"} com sucesso!`,
-			);
-			navigate(`/admin/posts?page=${returnPage}`, {
-				state: { refresh: Date.now() },
-			});
+			// Success handling
+			setLastSaved(new Date());
+			setIsDirty(false);
+
+			if (!isAutoSave) {
+				toast.success(
+					`Matéria ${id ? "atualizada" : "criada"} com sucesso!`,
+				);
+				navigate(`/admin/posts?page=${returnPage}`, {
+					state: { refresh: Date.now() },
+				});
+			} else {
+				// If auto-save created a NEW post, update the URL silently so future auto-saves update it
+				if (!isEditing && result.data?.id) {
+					window.history.replaceState(
+						null,
+						"",
+						`/admin/posts/edit/${result.data.id}`,
+					);
+					// We can't easily force a re-render/hook update without causing issues,
+					// but usually navigate(..., { replace: true }) is better.
+					// For now, let's just accept that the next save might create another diff if ID isn't set?
+					// Wait, if we don't update ID, we might create duplicates.
+					// We SHOULD navigate to the edit page silently.
+					navigate(`/admin/posts/edit/${result.data.id}`, {
+						replace: true,
+						state: { returnPage },
+					});
+				}
+			}
 		} catch (error) {
 			console.error("Error saving post:", error);
-			toast.error(
-				"Erro ao salvar matéria: " +
-					(error.message || "Erro desconhecido"),
-			);
+			if (!isAutoSave) {
+				toast.error(
+					"Erro ao salvar matéria: " +
+						(error.message || "Erro desconhecido"),
+				);
+			}
 		} finally {
 			setSaving(false);
 		}
@@ -308,12 +380,34 @@ const PostForm = () => {
 							</div>
 
 							<div className="flex items-center space-x-2">
+								<div className="flex flex-col items-end mr-4">
+									<p className="text-xs text-text-secondary">
+										{saving
+											? "Salvando..."
+											: lastSaved
+												? `Salvo às ${format(
+														lastSaved,
+														"HH:mm",
+														{
+															locale: ptBR,
+														},
+													)}`
+												: "Rascunho não salvo"}
+									</p>
+								</div>
+
 								<button
-									onClick={() =>
-										navigate(
-											`/admin/posts?page=${returnPage}`,
-										)
-									}
+									onClick={() => {
+										if (isDirty) {
+											// Should we ask or just save?
+											// Based on request: "ensure fluid experience", lets save draft then go back
+											handleSave(false, false);
+										} else {
+											navigate(
+												`/admin/posts?page=${returnPage}`,
+											);
+										}
+									}}
 									className="btn-outline flex items-center space-x-2"
 								>
 									<ArrowLeft className="w-4 h-4" />
@@ -692,6 +786,43 @@ const PostForm = () => {
 										<span
 											className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
 												formData.featured
+													? "translate-x-6"
+													: "translate-x-1"
+											}`}
+										/>
+									</button>
+								</div>
+
+								<div className="flex items-center justify-between pt-4 border-t border-gray-100">
+									<div>
+										<label className="text-sm font-medium text-navy flex items-center space-x-2">
+											<span>Matéria Urgente</span>
+											<span className="relative flex h-2 w-2">
+												<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[hsl(5,55%,48%)] opacity-75"></span>
+												<span className="relative inline-flex rounded-full h-2 w-2 bg-[hsl(5,55%,48%)]"></span>
+											</span>
+										</label>
+										<p className="text-xs text-text-secondary">
+											Aparecerá no ticker de notícias
+											urgentes e na página dedicada
+										</p>
+									</div>
+									<button
+										onClick={() =>
+											handleChange(
+												"urgent",
+												!formData.urgent,
+											)
+										}
+										className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+											formData.urgent
+												? "bg-[hsl(5,55%,48%)]"
+												: "bg-gray-200"
+										}`}
+									>
+										<span
+											className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+												formData.urgent
 													? "translate-x-6"
 													: "translate-x-1"
 											}`}

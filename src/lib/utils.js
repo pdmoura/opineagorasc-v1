@@ -48,21 +48,27 @@ export const formatRelativeTime = (date) => {
 
 	const minutes = differenceInMinutes(now, dateObj);
 	if (minutes < 1) {
-		return "1 minuto atrás";
+		return "agora mesmo";
+	}
+	if (minutes < 60) {
+		return `${minutes} ${minutes === 1 ? "minuto" : "minutos"} atrás`;
+	}
+
+	const hours = differenceInHours(now, dateObj);
+	if (hours < 24) {
+		return `${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
 	}
 
 	const days = differenceInDays(now, dateObj);
-	if (days < 10) {
-		if (days > 0) {
-			return `${days} ${days === 1 ? "dia" : "dias"} atrás`;
+	if (days < 7) {
+		if (days === 0) {
+			// Fallback just in case hours didn't catch it
+			return "hoje";
 		}
-
-		const hours = differenceInHours(now, dateObj);
-		if (hours > 0) {
-			return `${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
+		if (days === 1) {
+			return "ontem";
 		}
-
-		return `${minutes} ${minutes === 1 ? "minuto" : "minutos"} atrás`;
+		return `${days} dias atrás`;
 	}
 
 	return format(dateObj, "dd/MM/yyyy", { locale: ptBR });

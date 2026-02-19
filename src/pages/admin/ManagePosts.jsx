@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ReactMarkdown from "react-markdown";
 
 // Components
 import CarouselPreview from "../../components/admin/preview/CarouselPreview";
@@ -66,12 +67,11 @@ const ManagePosts = () => {
 					case "text":
 						return (
 							<div key={block.id} className="mb-6">
-								<div
-									className="prose prose-lg max-w-none text-gray-800 leading-relaxed"
-									dangerouslySetInnerHTML={{
-										__html: block.data.content,
-									}}
-								/>
+								<div className="prose prose-lg max-w-none text-gray-800 leading-relaxed">
+									<ReactMarkdown>
+										{block.data.content}
+									</ReactMarkdown>
+								</div>
 							</div>
 						);
 
@@ -96,16 +96,13 @@ const ManagePosts = () => {
 
 					case "imageText":
 						return (
-							<div
-								key={block.id}
-								className={`mb-6 grid grid-cols-1 ${block.data.align === "right" ? "lg:grid-cols-2" : "lg:grid-cols-2"}`}
-							>
+							<div key={block.id} className="mb-6 clearfix">
 								<div
-									className={
+									className={`relative w-full lg:w-1/2 mb-4 ${
 										block.data.align === "right"
-											? "lg:order-2"
-											: ""
-									}
+											? "lg:float-right lg:ml-6"
+											: "lg:float-left lg:mr-6"
+									}`}
 								>
 									<img
 										src={block.data.imageUrl}
@@ -113,15 +110,10 @@ const ManagePosts = () => {
 										className="w-full h-auto rounded-lg shadow-md"
 									/>
 								</div>
-								<div
-									className={`flex items-center ${block.data.align === "right" ? "lg:order-1 lg:pr-8" : "lg:pl-8"}`}
-								>
-									<div
-										className="prose prose-lg max-w-none text-gray-800 leading-relaxed"
-										dangerouslySetInnerHTML={{
-											__html: block.data.text,
-										}}
-									/>
+								<div className="prose prose-lg max-w-none text-gray-800 leading-relaxed">
+									<ReactMarkdown>
+										{block.data.text}
+									</ReactMarkdown>
 								</div>
 							</div>
 						);
@@ -288,7 +280,8 @@ const ManagePosts = () => {
 				author,
 				created_at,
 				date,
-				status
+				status,
+                urgent
 			`);
 
 			// 2. Base query for count (no data, no pagination)
@@ -698,8 +691,13 @@ const ManagePosts = () => {
 													</td>
 													<td className="px-6 py-4">
 														<div>
-															<div className="text-sm font-medium text-navy line-clamp-1">
+															<div className="text-sm font-medium text-navy line-clamp-1 flex items-center">
 																{post.title}
+																{post.urgent && (
+																	<span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+																		Urgente
+																	</span>
+																)}
 															</div>
 															{post.excerpt && (
 																<div className="text-sm text-text-secondary line-clamp-2">

@@ -14,6 +14,7 @@ import {
 	Send,
 	Eye,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 // Components
 import PostCard from "../components/public/PostCard";
@@ -174,27 +175,26 @@ const Post = () => {
 				case "imageText":
 					if (!data.imageUrl && !data.text) return null;
 					return (
-						<div
-							key={index}
-							className={`my-8 flex flex-col ${
-								data.align === "right"
-									? "md:flex-row-reverse"
-									: "md:flex-row"
-							} items-center gap-8`}
-						>
+						<div key={index} className="my-8 clearfix">
 							{data.imageUrl && (
-								<img
-									src={data.imageUrl}
-									alt=""
-									className="w-full md:w-1/3 rounded-lg shadow-md"
-									loading="lazy"
-								/>
+								<div
+									className={`relative w-full md:w-1/3 mb-4 ${
+										data.align === "right"
+											? "md:float-right md:ml-6"
+											: "md:float-left md:mr-6"
+									}`}
+								>
+									<img
+										src={data.imageUrl}
+										alt=""
+										className="w-full rounded-lg shadow-md"
+										loading="lazy"
+									/>
+								</div>
 							)}
 							{data.text && (
-								<div className="flex-1">
-									<p className="text-lg leading-relaxed whitespace-pre-line">
-										{data.text}
-									</p>
+								<div className="text-lg leading-relaxed prose max-w-none">
+									<ReactMarkdown>{data.text}</ReactMarkdown>
 								</div>
 							)}
 						</div>
@@ -245,9 +245,9 @@ const Post = () => {
 					if (!data.content) return null;
 					return (
 						<div key={index} className="my-6">
-							<p className="text-lg leading-relaxed whitespace-pre-line">
-								{data.content}
-							</p>
+							<div className="text-lg leading-relaxed prose max-w-none">
+								<ReactMarkdown>{data.content}</ReactMarkdown>
+							</div>
 						</div>
 					);
 

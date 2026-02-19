@@ -157,4 +157,22 @@
 			transform: translateY(0);
 		}
 	}
+
+	/* Urgent Ticker Animation */
+	@keyframes ticker {
+		0% {
+			transform: translateX(0);
+		}
+		100% {
+			transform: translateX(-50%);
+		}
+	}
+
+	.animate-ticker {
+		animation: ticker 60s linear infinite;
+	}
+
+	.group:hover .group-hover\:pause-animation {
+		animation-play-state: paused;
+	}
 }
