@@ -23,14 +23,6 @@ const AdminRoute = ({ children }) => {
 		return <Navigate to="/login" state={{ from: location }} replace />;
 	}
 
-	// Verificar se usuário é admin (email específico)
-	const adminEmail = "cristiano@opineagorasc.com.br";
-	const isAdmin = user?.email === adminEmail;
-
-	if (!isAdmin) {
-		return <Navigate to="/login" state={{ from: location }} replace />;
-	}
-
 	return children;
 };
 
