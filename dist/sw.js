@@ -54,7 +54,7 @@ self.addEventListener("fetch", (event) => {
 
 	// Ignorar requisições não-GET
 	if (request.method !== "GET") {
-		return fetch(request);
+		return;
 	}
 
 	// Não interceptar rotas admin - deixar o React Router lidar
